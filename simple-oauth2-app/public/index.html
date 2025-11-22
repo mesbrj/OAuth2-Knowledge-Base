@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple OAuth2 App</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 OAuth2 Login</h1>
+        <p class="subtitle">Simple OAuth2 Authorization Code Flow with GitHub</p>
+        
+        <div id="loginSection">
+            <button class="btn" onclick="login()">Login with GitHub</button>
+        </div>
+
+        <div id="userInfo" class="user-info">
+            <h2>Welcome!</h2>
+            <div id="userDetails"></div>
+            <button class="btn logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <script src="/config.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
