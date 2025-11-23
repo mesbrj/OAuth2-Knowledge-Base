@@ -34,15 +34,15 @@
   },
   
   "users": {
-    "github-user-example": {
+    "mesbrj": {
       "roles": ["editor"],
       "direct_permissions": []
     },
-    "mesbrj": {
+    "Soro-Kan": {
       "roles": ["collector:admin"],
       "direct_permissions": []
     },
-    "john-doe": {
+    "Kuluene": {
       "roles": ["viewer"],
       "direct_permissions": []
     }

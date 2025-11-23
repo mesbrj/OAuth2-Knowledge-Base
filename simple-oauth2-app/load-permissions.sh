@@ -8,7 +8,6 @@ ROLES_FILE="roles-permissions.json"
 # Check if jq is installed
 if ! command -v jq &> /dev/null; then
     echo "Error: jq is required but not installed."
-    echo "Install it: sudo apt-get install jq (Debian/Ubuntu) or brew install jq (Mac)"
     exit 1
 fi
 

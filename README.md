@@ -13,6 +13,10 @@ OAuth2 Authorization Code flow implementation with Ory IAM.
 - No Ory SDK used, only HTTP API calls
     - *Educational purposes*
 
-|App Index Login|Github Login|Github Permission Authorization|User info and grants|
-|:-:|:-:|:-:|:-:|
-|![](/simple-oauth2-app/docs/imgs/Index_login.png)|![](/simple-oauth2-app/docs/imgs/Github-login.png)|![](/simple-oauth2-app/docs/imgs/github-authorize.png)|![](/simple-oauth2-app/docs/imgs/loged-user-info.png)|![](/simple-oauth2-app/docs/imgs/loged-user-info.png)|
+|App Index Login|Github Login|Github Permission Authorization|
+|:-:|:-:|:-:|
+|![](/simple-oauth2-app/docs/imgs/Index_login.png)|![](/simple-oauth2-app/docs/imgs/Github-login.png)|![](/simple-oauth2-app/docs/imgs/github-authorize.png)|![](/simple-oauth2-app/docs/imgs/loged-user-info.png)|
+
+|mesbrj user info and grants|Soro-Kan user info and grants|
+|:-:|:-:|
+|![](/simple-oauth2-app/docs/imgs/loged-user-info.png)|![](/simple-oauth2-app/docs/imgs/loged-user2-info.png)|

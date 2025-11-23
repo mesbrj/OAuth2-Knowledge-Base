@@ -22,8 +22,8 @@ services:
       - "4466:4466" # Read API
       - "4467:4467" # Write API
     volumes:
-      - ./keto-config.yml:/etc/config/keto.yml
-    command: serve -c /etc/config/keto.yml
+      - ./keto-config.yml:/home/ory/keto.yml
+    command: serve all
     restart: unless-stopped
 
   app:
