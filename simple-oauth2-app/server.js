@@ -4,9 +4,12 @@ const express = require('express');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const HYDRA_ADMIN_URL = process.env.HYDRA_ADMIN_URL || 'http://localhost:4445';
+const KETO_READ_URL = process.env.KETO_READ_URL || 'http://localhost:4466';
+const KETO_WRITE_URL = process.env.KETO_WRITE_URL || 'http://localhost:4467';
 const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID;
 const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET;
 const OAUTH2_CLIENT_ID = process.env.OAUTH2_CLIENT_ID;
+const KETO_NAMESPACE = 'simple-oauth2-app';
 
 if (!GITHUB_CLIENT_ID || !GITHUB_CLIENT_SECRET) {
     console.error('❌ Error: GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET must be set in .env file or environment variables');
@@ -53,7 +56,6 @@ app.post('/token', async (req, res) => {
 
         res.json(data);
     } catch (error) {
-        console.error('Token exchange error:', error);
         res.status(500).json({ error: 'Token exchange failed' });
     }
 });
@@ -80,7 +82,6 @@ app.get('/userinfo', async (req, res) => {
 
         res.json(data);
     } catch (error) {
-        console.error('Userinfo error:', error);
         res.status(500).json({ error: 'Userinfo request failed' });
     }
 });
@@ -107,7 +108,6 @@ app.get('/login', async (req, res) => {
         
         res.redirect(githubAuthUrl);
     } catch (error) {
-        console.error('Login error:', error);
         res.status(500).send('Login failed');
     }
 });
@@ -180,12 +180,59 @@ app.get('/github-callback', async (req, res) => {
         const acceptData = await acceptResponse.json();
         res.redirect(acceptData.redirect_to);
     } catch (error) {
-        console.error('GitHub callback error:', error);
         res.status(500).send('Authentication failed');
     }
 });
 
-// Consent endpoint
+// Helper function: Get user's scopes from Keto
+async function getUserScopesFromKeto(username) {
+    try {
+        const params = new URLSearchParams({
+            namespace: KETO_NAMESPACE,
+            subject_id: username
+        });
+        
+        const response = await fetch(`${KETO_READ_URL}/relation-tuples?${params}`);
+        const data = await response.json();
+        
+        if (!data.relation_tuples) {
+            return [];
+        }
+        
+        // Extract permission objects (scopes)
+        const scopes = data.relation_tuples
+            .filter(tuple => tuple.relation === 'member') // User's roles
+            .map(tuple => tuple.object);
+        
+        // Now get permissions for those roles
+        const allPermissions = [];
+        for (const role of scopes) {
+            const roleParams = new URLSearchParams({
+                namespace: KETO_NAMESPACE,
+                'subject_set.namespace': KETO_NAMESPACE,
+                'subject_set.object': role,
+                'subject_set.relation': 'member'
+            });
+            
+            const permResponse = await fetch(`${KETO_READ_URL}/relation-tuples?${roleParams}`);
+            const permData = await permResponse.json();
+            
+            if (permData.relation_tuples) {
+                permData.relation_tuples.forEach(tuple => {
+                    if (tuple.relation === 'granted') {
+                        allPermissions.push(tuple.object);
+                    }
+                });
+            }
+        }
+        
+        return [...new Set(allPermissions)]; // Remove duplicates
+    } catch (error) {
+        return [];
+    }
+}
+
+// Consent endpoint - with Keto integration
 app.get('/consent', async (req, res) => {
     const consentChallenge = req.query.consent_challenge;
 
@@ -198,19 +245,35 @@ app.get('/consent', async (req, res) => {
         const consentReq = await fetch(`${HYDRA_ADMIN_URL}/admin/oauth2/auth/requests/consent?consent_challenge=${consentChallenge}`);
         const consentInfo = await consentReq.json();
 
-        // Auto-accept consent (for simplicity)
+        const username = consentInfo.context.username;
+        const requestedScopes = consentInfo.requested_scope;
+        
+        // Get user's permissions from Keto
+        const userPermissions = await getUserScopesFromKeto(username);
+        
+        // Grant scopes that user has permission for
+        // Always grant openid and offline (OAuth2 basics)
+        const grantedScopes = requestedScopes.filter(scope => {
+            if (scope === 'openid' || scope === 'offline') return true;
+            return userPermissions.includes(scope);
+        });
+
+        // Accept consent with filtered scopes
         const acceptResponse = await fetch(`${HYDRA_ADMIN_URL}/admin/oauth2/auth/requests/consent/accept?consent_challenge=${consentChallenge}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                grant_scope: consentInfo.requested_scope,
+                grant_scope: grantedScopes,
                 grant_access_token_audience: consentInfo.requested_access_token_audience,
                 remember: true,
                 remember_for: 3600,
                 session: {
-                    id_token: consentInfo.context
+                    id_token: {
+                        ...consentInfo.context,
+                        scopes: grantedScopes
+                    }
                 }
             })
         });
@@ -218,7 +281,6 @@ app.get('/consent', async (req, res) => {
         const acceptData = await acceptResponse.json();
         res.redirect(acceptData.redirect_to);
     } catch (error) {
-        console.error('Consent error:', error);
         res.status(500).send('Consent failed');
     }
 });

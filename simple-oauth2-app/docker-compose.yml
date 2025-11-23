@@ -16,6 +16,16 @@ services:
       - LOG_LEVEL=debug
     restart: unless-stopped
 
+  keto:
+    image: oryd/keto:v0.11.1
+    ports:
+      - "4466:4466" # Read API
+      - "4467:4467" # Write API
+    volumes:
+      - ./keto-config.yml:/etc/config/keto.yml
+    command: serve -c /etc/config/keto.yml
+    restart: unless-stopped
+
   app:
     image: node:18-alpine
     ports:
@@ -26,10 +36,13 @@ services:
     command: sh -c "npm install && node server.js"
     environment:
       - HYDRA_ADMIN_URL=http://hydra:4445
+      - KETO_READ_URL=http://keto:4466
+      - KETO_WRITE_URL=http://keto:4467
       - PORT=3000
       - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
       - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
       - OAUTH2_CLIENT_ID=${OAUTH2_CLIENT_ID}
     depends_on:
       - hydra
+      - keto
     restart: unless-stopped

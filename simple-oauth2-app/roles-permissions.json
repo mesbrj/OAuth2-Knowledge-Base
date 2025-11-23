@@ -1,0 +1,50 @@
+{
+  "comment": "Role and Permission definitions for simple-oauth2-app",
+  "namespace": "simple-oauth2-app",
+  
+  "roles": {
+    "collector:admin": {
+      "description": "Administrator role for collectors",
+      "permissions": [
+        "records:read",
+        "records:write",
+        "records:delete"
+      ]
+    },
+    "collector:member": {
+      "description": "Regular member of collectors",
+      "permissions": [
+        "records:read"
+      ]
+    },
+    "editor": {
+      "description": "Content editor role",
+      "permissions": [
+        "posts:read",
+        "posts:write"
+      ]
+    },
+    "viewer": {
+      "description": "Read-only viewer",
+      "permissions": [
+        "posts:read",
+        "records:read"
+      ]
+    }
+  },
+  
+  "users": {
+    "github-user-example": {
+      "roles": ["editor"],
+      "direct_permissions": []
+    },
+    "mesbrj": {
+      "roles": ["collector:admin"],
+      "direct_permissions": []
+    },
+    "john-doe": {
+      "roles": ["viewer"],
+      "direct_permissions": []
+    }
+  }
+}

@@ -1,19 +1,22 @@
-# Simple OAuth2 App with Hydra & GitHub
+# Simple OAuth2 App with Ory Hydra, Keto & GitHub
 
 A minimal OAuth2 Authorization Code Flow implementation using:
 - **Ory Hydra** as the OAuth2 Authorization Server
+- **Ory Keto** for RBAC management
 - **GitHub** for user authentication
 - **Pure JavaScript** (no SDK) for the client
 
 ## Architecture
 
 ```
-User Browser -> JavaScript App -> Hydra OAuth2 Server -> Node.js Login/Consent -> GitHub OAuth
+User Browser -> JavaScript App -> Ory Hydra (OAuth2) -> Node.js Login/Consent -> Ory Keto (Permissions) + GitHub OAuth
 ```
+
+**Flow**: User authenticates via GitHub → Hydra manages OAuth2 → Keto filters scopes based on user permissions → Tokens issued with authorized scopes only
 
 ## Prerequisites
 
-1. **Docker & Docker Compose** installed
+1. **Podman & Podman-Compose 1.5.0 (better --no-recreate support)** installed
 2. **GitHub OAuth App** configured
 
 ## GitHub Configuration
@@ -45,18 +48,18 @@ cp .env.example .env
 Before starting the services, create an OAuth2 client in Hydra. First, start only Hydra:
 
 ```bash
-docker-compose up -d hydra
+podman-compose up -d hydra
 ```
 
 Wait a few seconds for Hydra to start, then create the client:
 
 ```bash
-docker exec simple-oauth2-app_hydra_1 hydra create oauth2-client \
+podman exec simple-oauth2-app_hydra_1 hydra create oauth2-client \
   --endpoint http://localhost:4445 \
   --name "demo-client" \
   --grant-type authorization_code,refresh_token \
   --response-type code \
-  --scope openid,offline \
+  --scope openid,offline,records:read,records:write,records:delete,posts:read,posts:write,admin,users:read \
   --redirect-uri http://localhost:3000/callback \
   --token-endpoint-auth-method none \
   --format json
@@ -72,7 +75,13 @@ OAUTH2_CLIENT_ID=client_id
 Now start all services:
 
 ```bash
-docker-compose up -d
+podman-compose up -d --no-recreate keto app
+```
+
+Load Keto permissions:
+
+```bash
+./load-permissions.sh
 ```
 
 ## Usage
@@ -80,7 +89,7 @@ docker-compose up -d
 1. Open http://localhost:3000
 2. Click **"Login with GitHub"**
 3. You'll be redirected to GitHub to authorize
-4. After authorization, you'll see your user info
+4. After authorization, you'll see your user info and Granted Scopes
 
 ## How It Works
 
@@ -107,10 +116,13 @@ Hydra -> http://localhost:3000/login (with login_challenge)
 -> Returns to Hydra
 ```
 
-### 3. Consent Flow
+### 3. Consent Flow (with Keto Permission Filtering)
 ```
 Hydra -> http://localhost:3000/consent (with consent_challenge)
--> Auto-accepts consent
+-> Server queries Keto for user's permissions:
+   GET http://keto:4466/relation-tuples?namespace=simple-oauth2-app&subject_id=username
+-> Server filters requested scopes based on Keto permissions
+-> Accepts consent with filtered scopes
 -> Returns to Hydra
 ```
 
@@ -132,18 +144,22 @@ GET http://localhost:4444/userinfo
   Authorization: Bearer access_token
 ```
 
-## Project Structure
+## Permission Model
 
+### Namespace
+- `simple-oauth2-app` - All permissions for this application
+
+### Relations
+- `member` - User is a member of a role
+- `granted` - Permission is granted to a role/user
+
+### Example Structure
 ```
-simple-oauth2-app/
-├── docker-compose.yml       # Hydra + Node.js app
-├── server.js               # Login/Consent handler
-├── package.json            # Node.js dependencies
-├── .env                    # GitHub credentials (create from .env.example)
-└── public/
-    ├── index.html         # Main page
-    ├── callback.html      # OAuth callback page
-    └── app.js            # OAuth2 client logic
+User: github-user-example
+  ↓ (member)
+Role: collector:admin
+  ↓ (granted)
+Permissions: records:read, records:write, records:delete
 ```
 
 ## Key Files
@@ -153,63 +169,23 @@ Handles Hydra's login and consent flows by:
 - Serving OAuth2 client configuration via `/config.js` endpoint
 - Redirecting to GitHub for authentication
 - Processing GitHub OAuth callback
-- Accepting Hydra login/consent challenges
+- **Querying Keto** during consent to get user permissions
+- **Filtering requested scopes** based on Keto permissions
+- Accepting Hydra login/consent challenges with filtered scopes
 
 ### `public/app.js`
 Implements OAuth2 Authorization Code Flow with PKCE:
 - Loads OAuth2 client ID from server configuration
 - Generates state and PKCE parameters
-- Redirects to Hydra authorization endpoint
+- Redirects to Hydra authorization endpoint with custom scopes
 - Exchanges code for tokens
 - Fetches user info
+- **Displays granted scopes** as colored badges (blue: standard, green: custom)
 
-## Configuration
+### `roles-permissions.json`
+Defines all roles and permissions:
+- Maps users to roles
+- Defines role permissions
+- Supports direct permission grants
+- Loaded into Keto via `./load-permissions.sh`
 
-### Environment Variables
-
-Configuration can be set in `.env` file or as system environment variables:
-
-**GitHub OAuth** (required):
-- `GITHUB_CLIENT_ID` - Your GitHub OAuth App Client ID
-- `GITHUB_CLIENT_SECRET` - Your GitHub OAuth App Client Secret
-
-**OAuth2 Client** (required):
-- `OAUTH2_CLIENT_ID` - OAuth2 client ID from Hydra (obtained during client creation)
-
-**Server** (optional):
-- `PORT` - Server port (default: 3000)
-- `HYDRA_ADMIN_URL` - Hydra admin URL (default: http://hydra:4445 in Docker)
-- `NODE_ENV` - Environment (development/production)
-
-### Docker Compose
-
-The `docker-compose.yml` automatically passes environment variables from your host system to the containers:
-```yaml
-environment:
-  - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
-  - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
-  - OAUTH2_CLIENT_ID=${OAUTH2_CLIENT_ID}
-```
-
-This means you can either:
-1. Use a `.env` file (recommended for development)
-2. Set system environment variables (recommended for production)
-
-### Application URLs
-
-**Hydra** (docker-compose.yml):
-- Public URL: `http://localhost:4444`
-- Admin URL: `http://localhost:4445`
-- Login URL: `http://localhost:3000/login`
-- Consent URL: `http://localhost:3000/consent`
-
-**OAuth2 Client** (loaded from environment):
-- Client ID: Set via `OAUTH2_CLIENT_ID` in `.env` file
-- Redirect URI: `http://localhost:3000/callback`
-- Scope: `openid offline`
-- Config Endpoint: `http://localhost:3000/config.js` (serves client ID to browser)
-
-**GitHub OAuth** (.env file):
-- Set via `GITHUB_CLIENT_ID` environment variable
-- Set via `GITHUB_CLIENT_SECRET` environment variable
-- Callback URL: `http://localhost:3000/github-callback`

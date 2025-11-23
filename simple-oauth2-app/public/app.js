@@ -5,7 +5,7 @@ const config = {
     authorizationEndpoint: 'http://localhost:4444/oauth2/auth',
     tokenEndpoint: '/token', // Proxied through our server
     userinfoEndpoint: '/userinfo', // Proxied through our server
-    scope: 'openid offline'
+    scope: 'openid offline records:read records:write records:delete posts:read posts:write admin users:read'
 };
 
 // Generate random string for state and PKCE
@@ -124,10 +124,13 @@ async function handleCallback() {
 
         const tokens = await tokenResponse.json();
         
-        // Store tokens
+        // Store tokens and scope
         sessionStorage.setItem('access_token', tokens.access_token);
         if (tokens.refresh_token) {
             sessionStorage.setItem('refresh_token', tokens.refresh_token);
+        }
+        if (tokens.scope) {
+            sessionStorage.setItem('granted_scope', tokens.scope);
         }
 
         // Get user info
@@ -158,6 +161,7 @@ async function handleCallback() {
 // Display user info
 function displayUserInfo() {
     const userinfo = sessionStorage.getItem('userinfo');
+    const grantedScope = sessionStorage.getItem('granted_scope');
     
     if (userinfo) {
         const user = JSON.parse(userinfo);
@@ -196,6 +200,20 @@ function displayUserInfo() {
         }
         
         if (user.sub) html += `<div class="info-item" style="font-size: 0.9em; color: #666;"><strong>User ID:</strong> ${user.sub}</div>`;
+        
+        // Granted scopes/permissions
+        if (grantedScope) {
+            const scopes = grantedScope.split(' ');
+            const scopeBadges = scopes.map(scope => {
+                const isCustom = !['openid', 'offline'].includes(scope);
+                const color = isCustom ? '#28a745' : '#007bff';
+                return `<span style="display: inline-block; background: ${color}; color: white; padding: 4px 10px; border-radius: 12px; margin: 3px; font-size: 0.85em;">${scope}</span>`;
+            }).join('');
+            html += `<div class="info-item" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e0e0e0;">
+                <strong>🎯 Granted Permissions:</strong>
+                <div style="margin-top: 8px;">${scopeBadges}</div>
+            </div>`;
+        }
         
         document.getElementById('userDetails').innerHTML = html;
     }
