@@ -68,19 +68,37 @@ app.get('/userinfo', async (req, res) => {
             return res.status(401).json({ error: 'Missing authorization header' });
         }
 
+        // Get userinfo from Hydra
         const userinfoResponse = await fetch('http://hydra:4444/userinfo', {
             headers: {
                 'Authorization': authorization
             }
         });
 
-        const data = await userinfoResponse.json();
+        const userinfo = await userinfoResponse.json();
         
         if (!userinfoResponse.ok) {
-            return res.status(userinfoResponse.status).json(data);
+            return res.status(userinfoResponse.status).json(userinfo);
         }
 
-        res.json(data);
+        // Introspect token to get granted scopes
+        const token = authorization.replace('Bearer ', '');
+        const introspectResponse = await fetch('http://hydra:4445/admin/oauth2/introspect', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams({ token })
+        });
+
+        if (introspectResponse.ok) {
+            const introspectData = await introspectResponse.json();
+            if (introspectData.active && introspectData.scope) {
+                userinfo.scope = introspectData.scope;
+            }
+        }
+
+        res.json(userinfo);
     } catch (error) {
         res.status(500).json({ error: 'Userinfo request failed' });
     }

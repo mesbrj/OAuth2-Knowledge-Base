@@ -124,25 +124,10 @@ async function handleCallback() {
 
         const tokens = await tokenResponse.json();
         
-        // Store tokens and scope
+        // Store only the access token (we'll fetch fresh data on each load)
         sessionStorage.setItem('access_token', tokens.access_token);
         if (tokens.refresh_token) {
             sessionStorage.setItem('refresh_token', tokens.refresh_token);
-        }
-        if (tokens.scope) {
-            sessionStorage.setItem('granted_scope', tokens.scope);
-        }
-
-        // Get user info
-        const userinfoResponse = await fetch(config.userinfoEndpoint, {
-            headers: {
-                'Authorization': `Bearer ${tokens.access_token}`
-            }
-        });
-
-        if (userinfoResponse.ok) {
-            const userinfo = await userinfoResponse.json();
-            sessionStorage.setItem('userinfo', JSON.stringify(userinfo));
         }
 
         // Clean up
@@ -158,48 +143,68 @@ async function handleCallback() {
     }
 }
 
-// Display user info
-function displayUserInfo() {
-    const userinfo = sessionStorage.getItem('userinfo');
-    const grantedScope = sessionStorage.getItem('granted_scope');
+// Display user info - fetches fresh data from server on each load
+async function displayUserInfo() {
+    const accessToken = sessionStorage.getItem('access_token');
     
-    if (userinfo) {
-        const user = JSON.parse(userinfo);
+    if (!accessToken) {
+        return; // Not logged in
+    }
+    
+    try {
+        // Fetch fresh user info from Hydra (validates token)
+        const userinfoResponse = await fetch(config.userinfoEndpoint, {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`
+            }
+        });
+
+        if (!userinfoResponse.ok) {
+            // Token is invalid/expired
+            sessionStorage.clear();
+            return;
+        }
+
+        const userinfo = await userinfoResponse.json();
+        
+        // Get granted scope from userinfo response
+        const grantedScope = userinfo.scope || userinfo.scopes?.join(' ') || '';
+        
         document.getElementById('loginSection').style.display = 'none';
         document.getElementById('userInfo').classList.add('show');
         
         let html = '';
         
         // Avatar
-        if (user.avatar_url) {
+        if (userinfo.avatar_url) {
             html += `<div class="info-item" style="text-align: center;">
-                <img src="${user.avatar_url}" alt="Avatar" style="border-radius: 50%; width: 100px; height: 100px; margin-bottom: 15px;">
+                <img src="${userinfo.avatar_url}" alt="Avatar" style="border-radius: 50%; width: 100px; height: 100px; margin-bottom: 15px;">
             </div>`;
         }
         
         // Basic info
-        if (user.name) html += `<div class="info-item"><strong>Name:</strong> ${user.name}</div>`;
-        if (user.username) html += `<div class="info-item"><strong>Username:</strong> @${user.username}</div>`;
-        if (user.email) html += `<div class="info-item"><strong>Email:</strong> ${user.email}</div>`;
+        if (userinfo.name) html += `<div class="info-item"><strong>Name:</strong> ${userinfo.name}</div>`;
+        if (userinfo.username) html += `<div class="info-item"><strong>Username:</strong> @${userinfo.username}</div>`;
+        if (userinfo.email) html += `<div class="info-item"><strong>Email:</strong> ${userinfo.email}</div>`;
         
         // Additional info
-        if (user.bio) html += `<div class="info-item"><strong>Bio:</strong> ${user.bio}</div>`;
-        if (user.company) html += `<div class="info-item"><strong>Company:</strong> ${user.company}</div>`;
-        if (user.location) html += `<div class="info-item"><strong>Location:</strong> ${user.location}</div>`;
-        if (user.blog) html += `<div class="info-item"><strong>Website:</strong> <a href="${user.blog}" target="_blank">${user.blog}</a></div>`;
+        if (userinfo.bio) html += `<div class="info-item"><strong>Bio:</strong> ${userinfo.bio}</div>`;
+        if (userinfo.company) html += `<div class="info-item"><strong>Company:</strong> ${userinfo.company}</div>`;
+        if (userinfo.location) html += `<div class="info-item"><strong>Location:</strong> ${userinfo.location}</div>`;
+        if (userinfo.blog) html += `<div class="info-item"><strong>Website:</strong> <a href="${userinfo.blog}" target="_blank">${userinfo.blog}</a></div>`;
         
         // GitHub stats
-        if (user.public_repos !== undefined) html += `<div class="info-item"><strong>Public Repos:</strong> ${user.public_repos}</div>`;
-        if (user.followers !== undefined) html += `<div class="info-item"><strong>Followers:</strong> ${user.followers}</div>`;
-        if (user.following !== undefined) html += `<div class="info-item"><strong>Following:</strong> ${user.following}</div>`;
+        if (userinfo.public_repos !== undefined) html += `<div class="info-item"><strong>Public Repos:</strong> ${userinfo.public_repos}</div>`;
+        if (userinfo.followers !== undefined) html += `<div class="info-item"><strong>Followers:</strong> ${userinfo.followers}</div>`;
+        if (userinfo.following !== undefined) html += `<div class="info-item"><strong>Following:</strong> ${userinfo.following}</div>`;
         
         // Account creation date
-        if (user.created_at) {
-            const date = new Date(user.created_at);
+        if (userinfo.created_at) {
+            const date = new Date(userinfo.created_at);
             html += `<div class="info-item"><strong>Member Since:</strong> ${date.toLocaleDateString()}</div>`;
         }
         
-        if (user.sub) html += `<div class="info-item" style="font-size: 0.9em; color: #666;"><strong>User ID:</strong> ${user.sub}</div>`;
+        if (userinfo.sub) html += `<div class="info-item" style="font-size: 0.9em; color: #666;"><strong>User ID:</strong> ${userinfo.sub}</div>`;
         
         // Granted scopes/permissions
         if (grantedScope) {
@@ -216,6 +221,10 @@ function displayUserInfo() {
         }
         
         document.getElementById('userDetails').innerHTML = html;
+    } catch (error) {
+        console.error('Error fetching user info:', error);
+        sessionStorage.clear();
+        window.location.href = '/';
     }
 }
 
