@@ -1,11 +1,21 @@
-# Simple OAuth2 App with Ory Hydra, Keto & GitHub
+# Simple OAuth2 GUI Auth App
 
 A minimal OAuth2 Authorization Code Flow implementation using:
-- **Ory Hydra** as the OAuth2 Authorization Server
-- **Ory Keto** for RBAC management
-- **GitHub** for user authentication
-- **Pure JavaScript** (no SDK) for the client
 
+- **Ory Hydra:** OAuth2 Authorization Code Flow with PKCE
+    - GitHub as Identity Provider
+- **Ory Keto:** Role-Based Access Control (RBAC)
+    - Integrating in `consent` step of OAuth2 flow adding additional scopes to the access token
+- No Ory SDK used, only HTTP calls
+    - *Educational purposes*
+
+|App Index Login|Github Login|Github Permission Authorization|
+|:-:|:-:|:-:|
+|![](/JS-GUI-Auth-APP/docs/imgs/Index_login.png)|![](/JS-GUI-Auth-APP/docs/imgs/Github-login.png)|![](/JS-GUI-Auth-APP/docs/imgs/github-authorize.png)|![](/JS-GUI-Auth-APP/docs/imgs/loged-user-info.png)|
+
+|mesbrj user info and grants|Soro-Kan user info and grants|
+|:-:|:-:|
+|![](/JS-GUI-Auth-APP/docs/imgs/loged-user-info.png)|![](/JS-GUI-Auth-APP/docs/imgs/loged-user2-info.png)|
 ## Architecture
 
 ```
