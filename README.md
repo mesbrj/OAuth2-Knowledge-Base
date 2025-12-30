@@ -8,6 +8,4 @@
 
 - [JavaScript GUI Authentication Application](/JS-GUI-Auth-APP/README.md)
 
-**FastAPI OAuth2 Resource Server Web-API**
-- [Single **Uvicorn** worker](/FastAPI-Resource-Server/single-worker/README.md)
-- [Multiple **Uvicorn** workers](/FastAPI-Resource-Server/multi-workers/README.md)
+- [FastAPI OAuth2 Resource Server Web-API](/FastAPI-Resource-Server/README.md)

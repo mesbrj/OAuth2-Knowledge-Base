@@ -1,0 +1,6 @@
+sqlmodel
+pydantic[email]
+aiosqlite
+pytest
+pytest-mock
+pytest-cov
