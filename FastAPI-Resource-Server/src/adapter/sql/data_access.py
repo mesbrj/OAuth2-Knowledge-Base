@@ -5,8 +5,8 @@ from sqlmodel import select
 from sqlalchemy.exc import SQLAlchemyError
 from pydantic import ValidationError
 
-from adapter.SQL.models import User, Team, Project, ProjectUserLink, ProjectRole
-from adapter.SQL.data_base import get_session
+from adapter.sql.models import User, Team, Project, ProjectUserLink, ProjectRole
+from adapter.sql.data_base import get_session
 from ports.interfaces import dbAccess
 
 

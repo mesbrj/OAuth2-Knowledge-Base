@@ -2,5 +2,6 @@ sqlmodel
 pydantic[email]
 aiosqlite
 pytest
+pytest-asyncio
 pytest-mock
 pytest-cov

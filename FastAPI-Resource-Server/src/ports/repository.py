@@ -1,4 +1,4 @@
-from adapter.SQL.data_access import dbAccessImpl
+from adapter.sql.data_access import dbAccessImpl
 
 
 def repo_factory(repo_type: str):

@@ -1,5 +1,6 @@
 from ports.interfaces import dataManager
 from ports.repository import repo_factory
+from core.data_domain import userEntity
 
 class dataManagerImpl(dataManager):
     """
@@ -7,10 +8,17 @@ class dataManagerImpl(dataManager):
     """
     def __init__(self):
         self.db = repo_factory("database")
+        self.entities = {
+            "users": userEntity,
+        }
 
-    async def process(self, operation: str, model: str, **kwargs):
+    async def process(self, operation: str, entity: str, **kwargs):
+        if entity not in self.entities.keys():
+            raise ValueError(f"Entity '{entity}' is not supported.")
+
         if operation == "create":
-            await self.db.create_record(table_id = model, attributes = kwargs)
+            attributes = self.entities[entity](**kwargs)
+            await self.db.create_record(table_id = entity, attributes = attributes.model_dump())
 
 class publicCrud():
     """
