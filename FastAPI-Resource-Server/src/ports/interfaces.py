@@ -1,3 +1,4 @@
+import uuid
 from abc import ABC, abstractmethod
 
 # inbound interfaces
@@ -17,6 +18,11 @@ class dbAccess(ABC):
     """
     @abstractmethod
     async def create_record(self, table_id: str, attributes: dict): ...
+
+    @abstractmethod
+    async def read_record(
+        self, table_id: str, record_name: str | None = None, record_id: str | uuid.UUID | None = None
+        ): ...
 
 #    @abstractmethod
 #    async def update(self, table_id: str, attributes: dict): ...

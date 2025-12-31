@@ -11,8 +11,15 @@ class createUser(BaseModel):
     email: EmailStr
     location: str | None = None
     team_id: uuid.UUID | None = None
-    team: str | None = None
+    team_name: str | None = None
     entity: Literal["users"] = "users"
+
+class createTeam(BaseModel):
+    name: str
+    description: str | None = None
+    manager_id: uuid.UUID | None = None
+    manager_name: str | None = None
+    entity: Literal["teams"] = "teams"
 
 # Query models
 
