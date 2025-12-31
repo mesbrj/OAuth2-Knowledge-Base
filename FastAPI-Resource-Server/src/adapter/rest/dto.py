@@ -7,9 +7,8 @@ from pydantic import BaseModel, EmailStr
 # Request models
 
 class createUser(BaseModel):
-    id: uuid.UUID | None = None
-    name: str | None = None
-    email: EmailStr | None = None
+    name: str
+    email: EmailStr
     location: str | None = None
     team_id: uuid.UUID | None = None
     team: str | None = None
