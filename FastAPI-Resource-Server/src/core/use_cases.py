@@ -10,9 +10,9 @@ class dataManagerImpl(dataManager):
 
     async def process(self, operation: str, model: str, **kwargs):
         if operation == "create":
-            await self.db.create(model, **kwargs)
+            await self.db.create_record(table_id = model, attributes = kwargs)
 
-class publicCrud(object):
+class publicCrud():
     """
     Proxy class to filter allowed operations and allowed models (only Database)
     """
@@ -20,10 +20,10 @@ class publicCrud(object):
         self._proxy_to = dataManagerImpl()
 
     def __getattr__(self, name):
-        def filter(*args, **kwargs):
+        async def filter(*args, **kwargs):
             if kwargs["model"] not in ["users", "teams", "projects"]:
                 return None
             if kwargs["operation"] not in ["create", "read", "update", "delete"]:
                 return None
-            return getattr(self._proxy_to, name)(*args, **kwargs)
+            return await getattr(self._proxy_to, name)(*args, **kwargs)
         return filter

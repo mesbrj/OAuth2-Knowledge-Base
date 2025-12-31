@@ -21,7 +21,7 @@ table = {
 class dbAccessImpl(dbAccess):
     @classmethod
     async def create_record(cls, table_id: str, attributes: dict):
-        if table.get(table_id) is None:
+        if not table_id or table_id not in table.keys():
             logging.error(f"Table '{table_id}' does not exist.")
             return
         try:
