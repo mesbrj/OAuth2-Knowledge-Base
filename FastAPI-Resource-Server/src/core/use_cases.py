@@ -1,6 +1,7 @@
 from ports.interfaces import dataManager
 from ports.repository import repo_factory
-from core.data_domain import userEntity
+from core.data_domain import userEntity, teamEntity
+from core.data_manager_helper import validation_helper
 
 class dataManagerImpl(dataManager):
     """
@@ -10,15 +11,32 @@ class dataManagerImpl(dataManager):
         self.db = repo_factory("database")
         self.entities = {
             "users": userEntity,
+            "teams": teamEntity,
         }
 
+    @validation_helper
     async def process(self, operation: str, entity: str, **kwargs):
-        if entity not in self.entities.keys():
+        if (
+            not entity 
+            or entity not in self.entities.keys()
+        ):
             raise ValueError(f"Entity '{entity}' is not supported.")
 
         if operation == "create":
             attributes = self.entities[entity](**kwargs)
-            await self.db.create_record(table_id = entity, attributes = attributes.model_dump())
+            record = await self.db.create_record(
+                table_id = entity,
+                attributes = attributes.model_dump(exclude_none=True)
+            )
+            return record
+
+        elif operation == "read":
+            record = await self.db.read_record(
+                table_id = entity,
+                record_name = kwargs.get("record_name"),
+                record_id = kwargs.get("record_id")
+            )
+            return record
 
 class publicCrud():
     """
