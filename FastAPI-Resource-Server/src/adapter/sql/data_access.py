@@ -35,13 +35,11 @@ class dbAccessImpl(dbAccess):
 
     @classmethod
     async def read_record(
-        cls, table_id: str, record_name: str | None, record_id: str | uuid.UUID | None
+        cls, table_id: str, record_name: str | None = None, record_id: str | uuid.UUID | None =  None
         ):
         if not table_id or table_id not in table.keys():
             raise ValueError(f"Table '{table_id}' does not exist.")
         try:
-            if isinstance(record_id, str):
-                record_id = uuid.UUID(record_id)
             async with get_session() as db:
                 if record_id:
                         statement = select(
@@ -52,10 +50,6 @@ class dbAccessImpl(dbAccess):
                     statement = select(
                         table[table_id]).where(
                             table[table_id].name == record_name
-                        )
-                else:
-                    raise ValueError(
-                        "'record_id' or 'record_name' must be provided."
                         )
                 result = await db.exec(statement)
                 record = result.first()

@@ -1,0 +1,40 @@
+import uuid
+from functools import wraps
+
+from ports.repository import repo_factory
+
+
+def validation_helper(func):
+    @wraps(func)
+    async def wrapper(*args, **kwargs):
+        wrapped = func.__qualname__.split('.')
+        wrapped.append(kwargs.get("operation"))
+        wrapped.append(kwargs.get("entity"))
+        match wrapped:
+
+            case ['dataManagerImpl', 'process', 'create', 'users']:
+                if kwargs.get("team_name"):
+                    db = repo_factory("database")
+                    record = await db.read_record(
+                        table_id = "teams",
+                        record_name = kwargs.get("team_name")
+                    )
+                    if not record:
+                        raise ValueError(
+                            f"Team with name '{kwargs.get('team_name')}' does not exist."
+                        )
+                    if isinstance(record.id, str):
+                        kwargs["team_id"] = uuid.UUID(record.id)
+                    kwargs["team_id"] = record.id
+
+            case ['dataManagerImpl', 'process', 'read', _]:
+                if not kwargs.get("record_id") and not kwargs.get("record_name"):
+                    raise ValueError(
+                        "'record_id' or 'record_name' must be provided."
+                    )
+                if isinstance(kwargs.get("record_id"), str):
+                        kwargs["record_id"] = uuid.UUID(kwargs.get("record_id"))
+
+        return await func(*args, **kwargs)
+
+    return wrapper

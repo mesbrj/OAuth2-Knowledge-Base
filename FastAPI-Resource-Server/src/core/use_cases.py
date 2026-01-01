@@ -1,6 +1,7 @@
 from ports.interfaces import dataManager
 from ports.repository import repo_factory
 from core.data_domain import userEntity, teamEntity
+from core.data_manager_helper import validation_helper
 
 class dataManagerImpl(dataManager):
     """
@@ -13,6 +14,7 @@ class dataManagerImpl(dataManager):
             "teams": teamEntity,
         }
 
+    @validation_helper
     async def process(self, operation: str, entity: str, **kwargs):
         if (
             not entity 
@@ -22,7 +24,10 @@ class dataManagerImpl(dataManager):
 
         if operation == "create":
             attributes = self.entities[entity](**kwargs)
-            record = await self.db.create_record(table_id = entity, attributes = attributes.model_dump())
+            record = await self.db.create_record(
+                table_id = entity,
+                attributes = attributes.model_dump(exclude_none=True)
+            )
             return record
 
         elif operation == "read":
