@@ -1,4 +1,4 @@
-import uuid
+from uuid import UUID
 
 from sqlmodel import select
 from sqlalchemy.exc import SQLAlchemyError
@@ -35,7 +35,7 @@ class dbAccessImpl(dbAccess):
 
     @classmethod
     async def read_record(
-        cls, table_id: str, record_name: str | None = None, record_id: uuid.UUID | None =  None
+        cls, table_id: str, record_name: str | None = None, record_id: UUID | None =  None
         ):
         if not table_id or table_id not in table.keys():
             raise ValueError(f"Table '{table_id}' does not exist.")
@@ -56,20 +56,3 @@ class dbAccessImpl(dbAccess):
                 return record
         except (SQLAlchemyError, ValueError) as error:
             raise ValueError(f"Error occurred: {error}")
-
-
-#async def test_update(user_id: str | uuid.UUID, new_location: str):
-#    if isinstance(user_id, str):
-#        user_id = uuid.UUID(user_id)
-#    async with get_session() as db:
-#        statement = select(
-#            table["users"]).where(
-#                table["users"].id == user_id
-#            )
-#        result = await db.exec(statement)
-#        user = result.first()
-#        if user:
-#            user.location = new_location
-#            db.add(user)
-#            await db.commit()
-#            await db.refresh(user)

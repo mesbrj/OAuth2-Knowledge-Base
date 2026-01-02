@@ -1,4 +1,4 @@
-import uuid
+from uuid import UUID
 from abc import ABC, abstractmethod
 
 # inbound interfaces
@@ -21,7 +21,7 @@ class dbAccess(ABC):
 
     @abstractmethod
     async def read_record(
-        self, table_id: str, record_name: str | None = None, record_id: uuid.UUID | None = None
+        self, table_id: str, record_name: str | None = None, record_id: UUID | None = None
         ): ...
 
 #    @abstractmethod

@@ -7,17 +7,23 @@ from sqlalchemy import event
 
 
 def db_engine(env: str) -> AsyncEngine:
-    if env == "production":
-        # PostgreSQL async engine
-        pass
-    elif env == "staging":
-        # PostgreSQL async engine
-        pass
+    if env == "production" or env == "staging":
+        connection_string = environ.get("PSQL_DATABASE_URL")
+        return create_async_engine(
+            connection_string,
+            echo=False,
+            future=True,
+            pool_pre_ping=True,
+            pool_size=20,
+            max_overflow=2,
+            pool_timeout=30,
+            pool_recycle=7200,
+        )
 
     elif env == "development":
         dev_engine = create_async_engine(
             "sqlite+aiosqlite:///dev.db",
-            echo=False,
+            echo=True if environ.get("DEBUG_SQLALCHEMY", "False") == "True" else False,
             pool_pre_ping=True,
         )
         @event.listens_for(dev_engine.sync_engine, "connect")
