@@ -1,4 +1,5 @@
 from typing import Literal
+from uuid import UUID
 from pydantic import BaseModel, EmailStr
 
 class createUser(BaseModel):
@@ -16,4 +17,5 @@ class createTeam(BaseModel):
 
 class readEntity(BaseModel):
     record_name: str
+    record_id: UUID | None = None
     entity: Literal["users", "teams"]

@@ -1,0 +1,64 @@
+{
+  "comment": "Scope Roles and Permissions",
+  "namespace": "fastapi-resource-server",
+
+  "roles": {
+    "data:admin": {
+      "description": "Administrator role for data",
+      "permissions": [
+        "data:read",
+        "data:write",
+        "data:delete"
+      ]
+    },
+    "data:operator": {
+      "description": "Operator role for data",
+      "permissions": [
+        "data:read",
+        "data:write"
+      ]
+    },
+    "data:user": {
+      "description": "Read-only role for data",
+      "permissions": [
+        "data:read"
+      ]
+    },
+    "project:admin": {
+      "description": "Administrator role for project services",
+      "permissions": [
+        "project:read",
+        "project:write",
+        "project:delete"
+      ]
+    },
+    "project:operator": {
+      "description": "Operator role for project services",
+      "permissions": [
+        "project:read",
+        "project:write"
+      ]
+    },
+    "project:user": {
+      "description": "Read-only role for project services",
+      "permissions": [
+        "project:read"
+      ]
+    }
+  },
+
+  "users": {
+    "Soro-Kan": {
+      "roles": ["data:admin", "project:admin"],
+      "direct_permissions": []
+    },
+    "Kuluene": {
+      "roles": ["data:operator", "project:operator"],
+      "direct_permissions": []
+    },
+    "mesbrj": {
+      "roles": ["data:user", "project:user"],
+      "direct_permissions": []
+    }
+  }
+}

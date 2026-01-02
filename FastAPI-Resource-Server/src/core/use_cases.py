@@ -1,7 +1,11 @@
 from ports.interfaces import dataManager
 from ports.repository import repo_factory
-from core.data_domain import userEntity, teamEntity
 from core.data_manager_helper import validation_helper
+from core.data_domain import (
+    userEntity, teamEntity, projectEntity,
+    projectRoleEntity, startedProjectEntity
+)
+
 
 class dataManagerImpl(dataManager):
     """
@@ -12,6 +16,9 @@ class dataManagerImpl(dataManager):
         self.entities = {
             "users": userEntity,
             "teams": teamEntity,
+            "projects": projectEntity,
+            "project_roles": projectRoleEntity,
+            "started_projects": startedProjectEntity,
         }
 
     @validation_helper

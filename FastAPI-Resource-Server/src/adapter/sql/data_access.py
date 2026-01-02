@@ -14,7 +14,7 @@ table = {
     "teams": Team,
     "projects": Project,
     "started_projects": ProjectUserLink,
-    "roles": ProjectRole,
+    "project_roles": ProjectRole,
 }
 
 class dbAccessImpl(dbAccess):
@@ -42,10 +42,10 @@ class dbAccessImpl(dbAccess):
         try:
             async with get_session() as db:
                 if record_id:
-                        statement = select(
-                            table[table_id]).where(
-                                table[table_id].id == record_id
-                            )
+                    statement = select(
+                        table[table_id]).where(
+                            table[table_id].id == record_id
+                        )
                 elif record_name:
                     statement = select(
                         table[table_id]).where(
