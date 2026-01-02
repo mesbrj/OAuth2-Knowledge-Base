@@ -1,10 +1,5 @@
-import uuid
 from typing import Literal
 from pydantic import BaseModel, EmailStr
-
-# Response models
-
-# Request models
 
 class createUser(BaseModel):
     name: str
@@ -19,6 +14,6 @@ class createTeam(BaseModel):
     manager_name: str | None = None
     entity: Literal["teams"] = "teams"
 
-# Query models
-
-# Header models
+class readEntity(BaseModel):
+    record_name: str
+    entity: Literal["users", "teams"]

@@ -35,7 +35,7 @@ class dbAccessImpl(dbAccess):
 
     @classmethod
     async def read_record(
-        cls, table_id: str, record_name: str | None = None, record_id: str | uuid.UUID | None =  None
+        cls, table_id: str, record_name: str | None = None, record_id: uuid.UUID | None =  None
         ):
         if not table_id or table_id not in table.keys():
             raise ValueError(f"Table '{table_id}' does not exist.")
