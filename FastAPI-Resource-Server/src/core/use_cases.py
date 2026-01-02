@@ -47,7 +47,7 @@ class publicCrud():
 
     def __getattr__(self, name):
         async def filter(*args, **kwargs):
-            if kwargs["model"] not in ["users", "teams", "projects"]:
+            if kwargs["entity"] not in ["users", "teams", "projects"]:
                 return None
             if kwargs["operation"] not in ["create", "read", "update", "delete"]:
                 return None

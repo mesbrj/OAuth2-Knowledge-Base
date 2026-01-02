@@ -1,4 +1,3 @@
-from uuid import UUID
 from functools import wraps
 
 from ports.repository import repo_factory
@@ -23,8 +22,6 @@ def validation_helper(func):
                         raise ValueError(
                             f"Team with name '{kwargs.get('team_name')}' does not exist."
                         )
-                    if isinstance(record.id, str):
-                        kwargs["team_id"] = UUID(record.id)
                     kwargs["team_id"] = record.id
 
             case ['dataManagerImpl', 'process', 'read', _]:
@@ -32,8 +29,6 @@ def validation_helper(func):
                     raise ValueError(
                         "'record_id' or 'record_name' must be provided."
                     )
-                if isinstance(kwargs.get("record_id"), str):
-                        kwargs["record_id"] = UUID(kwargs.get("record_id"))
 
         return await func(*args, **kwargs)
 
