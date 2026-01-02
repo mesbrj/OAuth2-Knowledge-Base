@@ -8,6 +8,7 @@
       "permissions": [
         "data:read",
         "data:write",
+        "data:update",
         "data:delete"
       ]
     },
@@ -15,7 +16,8 @@
       "description": "Operator role for data",
       "permissions": [
         "data:read",
-        "data:write"
+        "data:write",
+        "data:update"
       ]
     },
     "data:user": {
@@ -29,6 +31,7 @@
       "permissions": [
         "project:read",
         "project:write",
+        "project:update",
         "project:delete"
       ]
     },
@@ -36,7 +39,8 @@
       "description": "Operator role for project services",
       "permissions": [
         "project:read",
-        "project:write"
+        "project:write",
+        "project:update"
       ]
     },
     "project:user": {

@@ -36,7 +36,7 @@ class User(SQLModel, table=True):
         default=None, sa_column=Column(DateTime(timezone=True), onupdate=func.now(), nullable=True)
     )
     team: Optional["Team"] = Relationship(back_populates="users", sa_relationship_kwargs={"foreign_keys": "[User.team_id]"})
-    manages: Optional["Team"] = Relationship(back_populates="manager", sa_relationship_kwargs={"foreign_keys": "[Team.manager_id]"})
+    manages: Optional["Team"] = Relationship(back_populates="manager", sa_relationship_kwargs={"foreign_keys": "[Team.manager_id]", "uselist": False})
     projects: list["Project"] = Relationship(back_populates="users", link_model=ProjectUserLink)
 
 
