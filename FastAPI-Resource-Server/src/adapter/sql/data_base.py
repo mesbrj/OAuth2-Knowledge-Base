@@ -30,6 +30,10 @@ def db_engine(env: str) -> AsyncEngine:
         dev_engine = create_async_engine(
             connection_string,
             echo = True if environ.get("DEBUG_SQLALCHEMY", "False") == "True" else False,
+            connect_args = {
+                "check_same_thread": False
+                },
+            future = True,
             pool_pre_ping = True,
         )
         @event.listens_for(dev_engine.sync_engine, "connect")
@@ -41,6 +45,7 @@ def db_engine(env: str) -> AsyncEngine:
 
 async def init_db() -> None:
     if current_environment in ["development", "test"]:
+        from adapter.sql.models import User, Team, Project, ProjectRole, ProjectUserLink
         async with engine.begin() as conn:
             await conn.run_sync(SQLModel.metadata.create_all)
 

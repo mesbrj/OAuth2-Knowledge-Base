@@ -58,6 +58,8 @@ class Team(SQLModel, table=True):
 
 
 class Project(SQLModel, table=True):
+    model_config = ConfigDict(extra='ignore')
+
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     name: str = Field(index=True)
     description: str | None = Field(default=None)
@@ -71,6 +73,8 @@ class Project(SQLModel, table=True):
 
 
 class ProjectRole(SQLModel, table=True):
+    model_config = ConfigDict(extra='ignore')
+
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     name: str = Field(index=True, unique=True)
     description: str | None = Field(default=None)

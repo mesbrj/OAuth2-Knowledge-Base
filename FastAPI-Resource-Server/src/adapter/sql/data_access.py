@@ -35,24 +35,31 @@ class dbAccessImpl(dbAccess):
 
     @classmethod
     async def read_record(
+        # add pagination arguments ...
         cls, table_id: str, record_name: str | None = None, record_id: UUID | None =  None
         ):
         if not table_id or table_id not in table.keys():
             raise ValueError(f"Table '{table_id}' does not exist.")
         try:
             async with get_session() as db:
+
                 if record_id:
+                    # if pagination... adjust statement accordingly
                     statement = select(
                         table[table_id]).where(
                             table[table_id].id == record_id
                         )
                 elif record_name:
+                    # if pagination... adjust statement accordingly
                     statement = select(
                         table[table_id]).where(
                             table[table_id].name == record_name
                         )
+
                 result = await db.exec(statement)
+                # if pagination... adjust result accordingly
                 record = result.first()
                 return record
+
         except (SQLAlchemyError, ValueError) as error:
             raise ValueError(f"Error occurred: {error}")
