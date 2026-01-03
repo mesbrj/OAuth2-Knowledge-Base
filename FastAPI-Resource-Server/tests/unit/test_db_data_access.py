@@ -8,7 +8,6 @@ from adapter.sql.data_access import dbAccessImpl
 async def test_db_data_access(
     db_create_tables,
     db_close,
-    delete_db_file,
     sample_teams_data,
     sample_users_data
     ):
@@ -60,6 +59,5 @@ async def test_db_data_access(
     assert user_record_2.email == sample_users_data["valid_values"][1]["email"]
 
     await db_close()
-    delete_db_file()
 
     assert not path.exists("test.db")

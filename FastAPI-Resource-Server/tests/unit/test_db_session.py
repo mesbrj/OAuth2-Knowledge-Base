@@ -11,7 +11,6 @@ async def test_db_session(
     db_create_tables,
     db_session,
     db_close,
-    delete_db_file,
     sample_one_team,
     sample_one_user
     ):
@@ -62,6 +61,5 @@ async def test_db_session(
         assert new_user.team_id == team_id
 
     await db_close()
-    delete_db_file()
 
     assert not path.exists("test.db")

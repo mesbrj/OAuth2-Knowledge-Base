@@ -3,11 +3,34 @@ from os import path, remove
 project_dir_path = path.dirname(path.dirname(path.abspath(__file__)))
 sys.path.append(f"{project_dir_path}/src")
 
-from  pytest import fixture
+import gc
+from contextlib import asynccontextmanager
+from asgi_lifespan import LifespanManager
+from httpx import AsyncClient, ASGITransport
+from fastapi import FastAPI
+from pytest import fixture
 
 from adapter.sql.models import User, Team
 from adapter.sql.data_base import init_db, get_session, close_session
+from adapter.rest.server import web_app
 
+
+@fixture()
+async def fastapi_client():
+    @asynccontextmanager
+    async def test_lifespan(app: FastAPI):
+        await init_db()
+        yield
+        await close_session()
+        if path.exists("test.db"):
+            remove("test.db")
+        gc.collect()
+
+    web_app.router.lifespan_context = test_lifespan
+    transport = ASGITransport(app=web_app)
+    async with LifespanManager(web_app):
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            yield client
 
 @fixture()
 def db_tables():
@@ -30,14 +53,10 @@ def db_session():
 def db_close():
     async def _close():
         await close_session()
-    return _close
-
-@fixture()
-def delete_db_file():
-    def _delete():
         if path.exists("test.db"):
             remove("test.db")
-    return _delete
+        gc.collect()
+    return _close
 
 @fixture()
 def sample_one_team():

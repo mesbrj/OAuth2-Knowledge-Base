@@ -3,6 +3,7 @@ fastapi[standard]
 sqlmodel
 pydantic[email]
 aiosqlite
+httpx
 pytest
 pytest-asyncio
 pytest-mock

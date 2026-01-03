@@ -21,7 +21,6 @@ async def test_inbound_factory(mocker):
 async def test_general_data_manager(
     db_create_tables,
     db_close,
-    delete_db_file,
     sample_teams_data,
     ):
 
@@ -49,7 +48,6 @@ async def test_general_data_manager(
     assert teams_2.description == sample_teams_data["valid_values"][1]["description"]
 
     await db_close()
-    delete_db_file()
 
     assert not path.exists("test.db")
 
@@ -57,7 +55,6 @@ async def test_general_data_manager(
 async def test_pub_data_manager(
     db_create_tables,
     db_close,
-    delete_db_file,
     sample_teams_data,
     sample_users_data,
     mocker,
@@ -115,6 +112,5 @@ async def test_pub_data_manager(
     assert users_2.team_id == teams_1.id
 
     await db_close()
-    delete_db_file()
 
     assert not path.exists("test.db")
