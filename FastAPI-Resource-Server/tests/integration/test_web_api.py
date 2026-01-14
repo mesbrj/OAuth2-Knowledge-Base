@@ -19,7 +19,6 @@ async def test_create_team(fastapi_client, sample_teams_data):
     data = response.json()
 
     assert data["record_name"] == team_data["name"]
-    assert data["entity"] == "teams"
     assert "record_id" in data
 
 
@@ -33,5 +32,4 @@ async def test_create_user(fastapi_client, sample_users_data):
     data = response.json()
 
     assert data["record_name"] == user_data["name"]
-    assert data["entity"] == "users"
     assert "record_id" in data

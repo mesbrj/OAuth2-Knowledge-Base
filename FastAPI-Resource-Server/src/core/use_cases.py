@@ -40,8 +40,11 @@ class dataManagerImpl(dataManager):
         elif operation == "read":
             record = await self.db.read_record(
                 table_id = entity,
-                record_name = kwargs.get("record_name"),
-                record_id = kwargs.get("record_id")
+                record_name = kwargs.get("record_name", None),
+                record_id = kwargs.get("record_id", None),
+                offset = kwargs.get("offset", None),
+                limit = kwargs.get("limit", None),
+                order = kwargs.get("order", "asc"),
             )
             return record
 

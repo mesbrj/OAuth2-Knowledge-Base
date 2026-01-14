@@ -39,6 +39,7 @@ class projectEntity(BaseModel):
     name: str | None = None
     description: str | None = None
     users: Optional[list[userEntity]] = None
+    entity: Literal["projects"] = "projects"
 
 
 class projectRoleEntity(BaseModel):
