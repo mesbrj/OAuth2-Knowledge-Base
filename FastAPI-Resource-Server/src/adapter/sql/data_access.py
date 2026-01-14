@@ -1,4 +1,5 @@
 from uuid import UUID
+from contextlib import asynccontextmanager
 
 from sqlmodel import select
 from sqlalchemy.exc import SQLAlchemyError
@@ -10,23 +11,63 @@ from adapter.sql.data_base import get_session
 from ports.interfaces import dbAccess
 
 
-table = {
-    "users": User,
-    "teams": Team,
-    "projects": Project,
-    "started_projects": ProjectUserLink,
-    "project_roles": ProjectRole,
-}
+class queryBuilder:
+    def __init__(self, session, table_mapping):
+        self._session = session
+        self._table = table_mapping
+        self._statement = None
+        
+    @property
+    def table(self):
+        return self._table
+    
+    def select(self, model):
+        self._statement = select(model)
+        return self
+    
+    def where(self, *conditions):
+        if self._statement is None:
+            raise ValueError("Must call select() before where()")
+        self._statement = self._statement.where(*conditions)
+        return self
+    
+    async def first(self):
+        if self._statement is None:
+            raise ValueError("Must call select() before executing query")
+        result = await self._session.exec(self._statement)
+        return result.first()
+    
+    async def all(self):
+        if self._statement is None:
+            raise ValueError("Must call select() before executing query")
+        result = await self._session.exec(self._statement)
+        return result.all()
+
 
 class dbAccessImpl(dbAccess):
+
+    table = {
+        "users": User,
+        "teams": Team,
+        "projects": Project,
+        "started_projects": ProjectUserLink,
+        "project_roles": ProjectRole,
+    }
+
+    @classmethod
+    @asynccontextmanager
+    async def query_records(cls):
+        async with get_session() as db:
+            yield queryBuilder(db, cls.table)
+
     @classmethod
     async def create_record(cls, table_id: str, attributes: dict):
-        if not table_id or table_id not in table.keys():
+        if not table_id or table_id not in cls.table.keys():
             raise ValueError(f"Table '{table_id}' does not exist.")
         try:
-            table[table_id].model_validate(attributes)
+            cls.table[table_id].model_validate(attributes)
             async with get_session() as db:
-                rec = table[table_id](**attributes)
+                rec = cls.table[table_id](**attributes)
                 db.add(rec)
                 await db.commit()
                 await db.refresh(rec)
@@ -44,13 +85,13 @@ class dbAccessImpl(dbAccess):
         limit: int | None = None,
         order: str | None = None,
         ):
-        if not table_id or table_id not in table.keys():
+        if not table_id or table_id not in cls.table.keys():
             raise ValueError(f"Table '{table_id}' does not exist.")
         if record_name and table_id == "started_projects":
             raise ValueError(f"Table '{table_id}' does not support filtering by name")
         try:
             async with get_session() as db:
-                statement = select(table[table_id])
+                statement = select(cls.table[table_id])
                 # Eager load sqlalchemy relationships for Team table
                 if table_id == "teams":
                     statement = statement.options(
@@ -60,13 +101,13 @@ class dbAccessImpl(dbAccess):
 
                 is_single_query = record_id is not None or record_name is not None
                 if record_id:
-                    statement = statement.where(table[table_id].id == record_id)
+                    statement = statement.where(cls.table[table_id].id == record_id)
                 elif record_name:
-                    statement = statement.where(table[table_id].name == record_name)
+                    statement = statement.where(cls.table[table_id].name == record_name)
                 else:
                     statement = statement.offset(offset or 0).limit(limit or 100)
                     if order in ("asc", "desc"):
-                        order_field = table[table_id].id if table_id == "started_projects" else table[table_id].name
+                        order_field = cls.table[table_id].id if table_id == "started_projects" else cls.table[table_id].name
                         statement = statement.order_by(
                             order_field.asc() if order == "asc" else order_field.desc()
                         )
@@ -83,7 +124,7 @@ class dbAccessImpl(dbAccess):
         record_id: UUID | None = None,
         attributes: dict = {}
         ):
-        if not table_id or table_id not in table.keys():
+        if not table_id or table_id not in cls.table.keys():
             raise ValueError(f"Table '{table_id}' does not exist.")
 
         record_id = attributes.get("id")
@@ -95,9 +136,9 @@ class dbAccessImpl(dbAccess):
 
         try:
             async with get_session() as db:
-                statement = select(table[table_id]).where(
-                    table[table_id].id == record_id if record_id
-                    else table[table_id].name == record_name
+                statement = select(cls.table[table_id]).where(
+                    cls.table[table_id].id == record_id if record_id
+                    else cls.table[table_id].name == record_name
                 )
                 result = await db.exec(statement)
                 existing_record = result.first()
@@ -120,7 +161,7 @@ class dbAccessImpl(dbAccess):
 
     @classmethod
     async def delete_record(cls, table_id: str, record_name: str | None = None, record_id: UUID | None = None):
-        if not table_id or table_id not in table.keys():
+        if not table_id or table_id not in cls.table.keys():
             raise ValueError(f"Table '{table_id}' does not exist.")
         if not record_id and not record_name:
             raise ValueError("Either 'id' or 'name' is required for delete operation.")
@@ -128,8 +169,8 @@ class dbAccessImpl(dbAccess):
             raise ValueError(f"Table '{table_id}' does not support filtering by name")
         try:
             async with get_session() as db:
-                statement = select(table[table_id]).where(
-                    table[table_id].id == record_id if record_id else table[table_id].name == record_name
+                statement = select(cls.table[table_id]).where(
+                    cls.table[table_id].id == record_id if record_id else cls.table[table_id].name == record_name
                 )
                 result = await db.exec(statement)
                 existing_record = result.first()

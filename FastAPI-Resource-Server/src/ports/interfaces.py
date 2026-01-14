@@ -22,6 +22,9 @@ class dbAccess(ABC):
     Interface for database operations
     """
     @abstractmethod
+    async def query_records(self): ...
+
+    @abstractmethod
     async def create_record(
         self,
         table_id: str,

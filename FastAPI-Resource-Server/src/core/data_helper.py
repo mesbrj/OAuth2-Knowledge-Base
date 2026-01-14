@@ -26,16 +26,14 @@ def validation_helper(func):
 
             case ['dataManagerImpl', 'process', 'create', 'teams']:
                 if kwargs.get("manager_email"):
-                    # The read_record function from data_access (SQL adapter) needs to be improved to support filtering... 
-                    from adapter.sql.models import User
-                    from sqlmodel import select
-                    from adapter.sql.data_base import get_session
-
-                    async with get_session() as session:
-                        statement = select(User).where(User.email == kwargs.get("manager_email"))
-                        result = await session.exec(statement)
-                        user = result.first()
-
+                    db = repo_factory("database")
+                    async with db.query_records() as query:
+                        user = await (
+                            query
+                            .select(query.table["users"])
+                            .where(query.table["users"].email == kwargs.get("manager_email"))
+                            .first()
+                        )
                     if not user:
                         raise ValueError(
                             f"User with email '{kwargs.get('manager_email')}' does not exist."
