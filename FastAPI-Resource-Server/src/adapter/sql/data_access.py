@@ -2,6 +2,7 @@ from uuid import UUID
 
 from sqlmodel import select
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import selectinload
 from pydantic import ValidationError
 
 from adapter.sql.models import User, Team, Project, ProjectUserLink, ProjectRole
@@ -50,6 +51,13 @@ class dbAccessImpl(dbAccess):
         try:
             async with get_session() as db:
                 statement = select(table[table_id])
+                # Eager load sqlalchemy relationships for Team table
+                if table_id == "teams":
+                    statement = statement.options(
+                        selectinload(Team.manager),
+                        selectinload(Team.users)
+                    )
+
                 is_single_query = record_id is not None or record_name is not None
                 if record_id:
                     statement = statement.where(table[table_id].id == record_id)

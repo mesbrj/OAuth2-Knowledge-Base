@@ -1,5 +1,5 @@
-
 from fastapi import Query
+
 from ports.inbound import inbound_factory
 from adapter.rest.dto import (
     createUser, createTeam, createResponse,

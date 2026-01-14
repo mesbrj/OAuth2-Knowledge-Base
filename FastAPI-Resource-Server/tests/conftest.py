@@ -71,12 +71,16 @@ def sample_teams_data():
     return {
         "valid_values": [
             {
-                "name": "testteam",
-                "description": "A team for testing"
+                "name": "engineering",
+                "description": "Engineering team"
             },
             {
-                "name": "testteam2",
-                "description": "Another team for testing"
+                "name": "marketing",
+                "description": "Marketing team"
+            },
+            {
+                "name": "sales",
+                "description": "Sales team"
             },
         ],
         "invalid_attribute": [
@@ -89,6 +93,12 @@ def sample_teams_data():
                 "desc": "Another team for testing"  # Wrong field name
             },
         ],
+        "invalid_value": [
+            {
+                "name": "",  # Empty name
+                "description": "Team with empty name"
+            },
+        ],
     }
 
 @fixture()
@@ -96,13 +106,24 @@ def sample_users_data():
     return {
         "valid_values": [
             {
-                "name": "testuser",
-                "email": "testuser@example.com"
+                "name": "alice",
+                "email": "alice@example.com",
+                "location": "New York"
             },
             {
-                "name": "testuser2",
-                "email": "testuser2@example.com",
-                "team_name": "testteam"
+                "name": "bob",
+                "email": "bob@example.com",
+                "location": "San Francisco",
+                "team_name": "engineering"
+            },
+            {
+                "name": "charlie",
+                "email": "charlie@example.com",
+                "team_name": "marketing"
+            },
+            {
+                "name": "diana",
+                "email": "diana@example.com"
             },
         ],
         "invalid_attribute": [
@@ -121,9 +142,13 @@ def sample_users_data():
                 "email": "testuser4_example.com"  # Invalid email format
             },
             {
-                "name": "testuser",
-                "email": "testuser@example.com",
+                "name": "testuser5",
+                "email": "testuser5@example.com",
                 "team_name": "nonexistentteam"  # Non-existent team
-            }
+            },
+            {
+                "name": "",  # Empty name
+                "email": "empty@example.com"
+            },
         ]
     }

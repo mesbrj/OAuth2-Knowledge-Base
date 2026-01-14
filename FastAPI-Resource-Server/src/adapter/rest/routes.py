@@ -10,7 +10,6 @@ from adapter.rest.dto import (
 )
 
 health_routes = APIRouter()
-
 crud_routes = APIRouter()
 
 @health_routes.get("/health", tags = ["Health"])

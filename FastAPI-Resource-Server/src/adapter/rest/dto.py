@@ -26,6 +26,7 @@ class createResponse(BaseModel):
 
 class readEntity(BaseModel):
     record_id: UUID | None = None
+    record_name: str | None = None
     entity: Literal["users", "teams"]
 
 
@@ -35,11 +36,27 @@ class queryPagination(BaseModel):
     order: Literal["asc", "desc"] = "asc"
 
 
-class readUserResponse(createUser):
+class readUserResponse(BaseModel):
+    model_config = {"from_attributes": True}
+
     id: UUID
+    name: str
+    email: EmailStr
+    location: str | None = None
+    team_id: UUID | None = None
+    entity: Literal["users"] = "users"
 
 
-class readTeamResponse(createTeam):
+
+
+class readTeamResponse(BaseModel):
+    model_config = {"from_attributes": True}
+
     id: UUID
+    name: str
+    description: str | None = None
+    manager_id: UUID | None = None
     manager: readUserResponse | None = None
     users: list[readUserResponse] | None = None
+    entity: Literal["teams"] = "teams"
+
