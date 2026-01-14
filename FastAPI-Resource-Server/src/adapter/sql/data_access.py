@@ -16,27 +16,27 @@ class queryBuilder:
         self._session = session
         self._table = table_mapping
         self._statement = None
-        
+
     @property
     def table(self):
         return self._table
-    
+
     def select(self, model):
         self._statement = select(model)
         return self
-    
+
     def where(self, *conditions):
         if self._statement is None:
             raise ValueError("Must call select() before where()")
         self._statement = self._statement.where(*conditions)
         return self
-    
+
     async def first(self):
         if self._statement is None:
             raise ValueError("Must call select() before executing query")
         result = await self._session.exec(self._statement)
         return result.first()
-    
+
     async def all(self):
         if self._statement is None:
             raise ValueError("Must call select() before executing query")
@@ -57,8 +57,12 @@ class dbAccessImpl(dbAccess):
     @classmethod
     @asynccontextmanager
     async def query_records(cls):
-        async with get_session() as db:
-            yield queryBuilder(db, cls.table)
+        try:
+            async with get_session() as db:
+                yield queryBuilder(db, cls.table)
+
+        except SQLAlchemyError as error:
+            raise ValueError(f"Error occurred: {error}")
 
     @classmethod
     async def create_record(cls, table_id: str, attributes: dict):
@@ -72,6 +76,7 @@ class dbAccessImpl(dbAccess):
                 await db.commit()
                 await db.refresh(rec)
                 return rec
+
         except (SQLAlchemyError, ValidationError) as error:
             raise ValueError(f"Error occurred: {error}")
 
@@ -89,6 +94,8 @@ class dbAccessImpl(dbAccess):
             raise ValueError(f"Table '{table_id}' does not exist.")
         if record_name and table_id == "started_projects":
             raise ValueError(f"Table '{table_id}' does not support filtering by name")
+
+        is_single_query = record_id is not None or record_name is not None
         try:
             async with get_session() as db:
                 statement = select(cls.table[table_id])
@@ -98,8 +105,6 @@ class dbAccessImpl(dbAccess):
                         selectinload(Team.manager),
                         selectinload(Team.users)
                     )
-
-                is_single_query = record_id is not None or record_name is not None
                 if record_id:
                     statement = statement.where(cls.table[table_id].id == record_id)
                 elif record_name:
@@ -113,6 +118,7 @@ class dbAccessImpl(dbAccess):
                         )
                 result = await db.exec(statement)
                 return result.first() if is_single_query else result.all()
+
         except (SQLAlchemyError, ValidationError) as error:
             raise ValueError(f"Error occurred: {error}")
 
@@ -151,11 +157,11 @@ class dbAccessImpl(dbAccess):
                     if key not in ("id", "created_at", "updated_at") and value is not None:
                         if not (key == "name" and record_name and not record_id):
                             setattr(existing_record, key, value)
-
                 db.add(existing_record)
                 await db.commit()
                 await db.refresh(existing_record)
                 return existing_record
+
         except (SQLAlchemyError, ValidationError) as error:
             raise ValueError(f"Error occurred: {error}")
 
@@ -180,5 +186,6 @@ class dbAccessImpl(dbAccess):
                 await db.delete(existing_record)
                 await db.commit()
                 return {"message": f"Record deleted successfully"}
+
         except (SQLAlchemyError, ValidationError) as error:
             raise ValueError(f"Error occurred: {error}")
