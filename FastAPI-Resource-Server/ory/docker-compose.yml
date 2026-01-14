@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  hydra:
+    image: oryd/hydra:v2.1.1
+    ports:
+      - "4444:4444" # Public
+      - "4445:4445" # Admin
+    command: serve all --dev
+    environment:
+      - DSN=memory
+      - URLS_SELF_ISSUER=http://localhost:4444
+      - URLS_LOGIN=http://localhost:3000/login
+      - URLS_CONSENT=http://localhost:3000/consent
+      - SECRETS_SYSTEM=youReallyNeedToChangeThis
+      - LOG_LEVEL=debug
+    restart: unless-stopped
+
+  keto:
+    image: oryd/keto:v0.11.1
+    ports:
+      - "4466:4466" # Read API
+      - "4467:4467" # Write API
+    volumes:
+      - ./keto-config.yml:/home/ory/keto.yml
+    command: serve all
+    restart: unless-stopped
