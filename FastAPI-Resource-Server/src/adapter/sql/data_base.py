@@ -52,8 +52,9 @@ async def init_db() -> None:
 def get_session() -> AsyncSession:
     return AsyncSession(engine)
 
-async def close_session() -> None:
+async def close_session() -> bool:
     await engine.dispose()
+    return True
 
 
 current_environment = environ.get("ENVIRONMENT", "development")

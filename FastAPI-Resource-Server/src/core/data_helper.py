@@ -7,8 +7,10 @@ def validation_helper(func):
     @wraps(func)
     async def wrapper(*args, **kwargs):
         wrapped = func.__qualname__.split('.')
-        wrapped.append(kwargs.get("operation"))
-        wrapped.append(kwargs.get("entity"))
+        if wrapped[0] == 'dataManagerImpl' and wrapped[1] == 'process':
+            wrapped.append(kwargs.get("operation"))
+            wrapped.append(kwargs.get("entity"))
+
         match wrapped:
 
             case ['dataManagerImpl', 'process', 'create', 'users']:

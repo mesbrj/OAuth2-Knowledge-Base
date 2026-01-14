@@ -21,10 +21,10 @@ async def fastapi_client():
     async def test_lifespan(app: FastAPI):
         await init_db()
         yield
-        await close_session()
-        if path.exists("test.db"):
-            remove("test.db")
-        gc.collect()
+        if await close_session():
+            if path.exists("test.db"):
+                remove("test.db")
+            gc.collect()
 
     web_app.router.lifespan_context = test_lifespan
     transport = ASGITransport(app=web_app)
