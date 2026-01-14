@@ -1,8 +1,12 @@
-from fastapi import APIRouter, Depends, status, Query
-from adapter.rest.func_deps import entity_create, entity_read
+from fastapi import APIRouter, Depends, status
+from adapter.rest.func_deps import (
+    entity_create,
+    entity_read_by_id,
+    entity_read_paginated
+)
 from adapter.rest.dto import (
     createResponse, createUser, createTeam,
-    readEntity, queryPagination, readUserResponse, readTeamResponse
+    readUserResponse, readTeamResponse
 )
 
 health_routes = APIRouter()
@@ -41,15 +45,16 @@ async def create_team(
 
 
 @crud_routes.get(
-    "/users/{user_id}",
+    "/users/{record_id}",
     response_model = readUserResponse,
     status_code = status.HTTP_200_OK,
     tags = ["Users"]
     )
-async def read_user_by_id(user_id: str):
-    return await entity_read(
-        query = readEntity(record_id = user_id, entity = "users")
-    )
+async def read_user_by_id(
+    record_id: str,
+    response: readUserResponse = Depends(entity_read_by_id("users"))
+    ):
+    return response
 
 
 @crud_routes.get(
@@ -58,27 +63,21 @@ async def read_user_by_id(user_id: str):
     status_code = status.HTTP_200_OK,
     tags = ["Users"]
     )
-async def read_all_users(
-    offset: int | None = Query(None, ge = 0),
-    limit: int | None = Query(None, ge = 1, le = 100),
-    order: str = Query("asc", pattern = "^(asc|desc)$")
-    ):
-    return await entity_read(
-        query = readEntity(entity = "users"),
-        pagination = queryPagination(offset = offset, limit = limit, order = order)
-    )
+async def read_all_users(response: list[readUserResponse] = Depends(entity_read_paginated("users"))):
+    return response
 
 
 @crud_routes.get(
-    "/teams/{team_id}",
+    "/teams/{record_id}",
     response_model = readTeamResponse,
     status_code = status.HTTP_200_OK,
     tags = ["Teams"]
     )
-async def read_team_by_id(team_id: str):
-    return await entity_read(
-        query = readEntity(record_id = team_id, entity = "teams")
-    )
+async def read_team_by_id(
+    record_id: str,
+    response: readTeamResponse = Depends(entity_read_by_id("teams"))
+    ):
+    return response
 
 
 @crud_routes.get(
@@ -87,12 +86,5 @@ async def read_team_by_id(team_id: str):
     status_code = status.HTTP_200_OK,
     tags = ["Teams"]
     )
-async def read_all_teams(
-    offset: int | None = Query(None, ge = 0),
-    limit: int | None = Query(None, ge = 1, le = 100),
-    order: str = Query("asc", pattern = "^(asc|desc)$")
-    ):
-    return await entity_read(
-        query = readEntity(entity = "teams"),
-        pagination = queryPagination(offset = offset, limit = limit, order = order)
-    )
+async def read_all_teams(response: list[readTeamResponse] = Depends(entity_read_paginated("teams"))):
+    return response

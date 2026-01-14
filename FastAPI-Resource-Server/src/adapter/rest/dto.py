@@ -26,7 +26,6 @@ class createResponse(BaseModel):
 
 class readEntity(BaseModel):
     record_id: UUID | None = None
-    record_name: str | None = None
     entity: Literal["users", "teams"]
 
 
