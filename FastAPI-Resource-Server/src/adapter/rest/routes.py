@@ -3,8 +3,8 @@ from fastapi import APIRouter, status
 
 from adapter.rest.di import PublicCrudDep, PaginationDep
 from adapter.rest.dto import (
-    createResponse, createUser, createTeam,
-    readUserResponse, readTeamResponse
+    CreateResponse, CreateUser, CreateTeam,
+    ReadUserResponse, ReadTeamResponse
 )
 
 health_routes = APIRouter()
@@ -17,12 +17,12 @@ def health_check():
 
 @crud_routes.post(
     "/users",
-    response_model=createResponse,
+    response_model=CreateResponse,
     status_code=status.HTTP_201_CREATED,
     tags=["Users"]
 )
 async def create_user(
-    body: createUser,
+    body: CreateUser,
     data_manager: PublicCrudDep
 ):
     new_rec = await data_manager.process(
@@ -30,7 +30,7 @@ async def create_user(
         entity=body.entity,
         **body.model_dump(exclude={"entity"})
     )
-    return createResponse(
+    return CreateResponse(
         record_id=new_rec.id,
         record_name=new_rec.name,
     )
@@ -38,12 +38,12 @@ async def create_user(
 
 @crud_routes.post(
     "/teams",
-    response_model=createResponse,
+    response_model=CreateResponse,
     status_code=status.HTTP_201_CREATED,
     tags=["Teams"]
 )
 async def create_team(
-    body: createTeam,
+    body: CreateTeam,
     data_manager: PublicCrudDep
 ):
     new_rec = await data_manager.process(
@@ -51,7 +51,7 @@ async def create_team(
         entity=body.entity,
         **body.model_dump(exclude={"entity"})
     )
-    return createResponse(
+    return CreateResponse(
         record_id=new_rec.id,
         record_name=new_rec.name,
     )
@@ -59,7 +59,7 @@ async def create_team(
 
 @crud_routes.get(
     "/users/{record_id}",
-    response_model=readUserResponse,
+    response_model=ReadUserResponse,
     status_code=status.HTTP_200_OK,
     tags=["Users"]
 )
@@ -77,7 +77,7 @@ async def read_user_by_id(
 
 @crud_routes.get(
     "/users",
-    response_model=list[readUserResponse],
+    response_model=list[ReadUserResponse],
     status_code=status.HTTP_200_OK,
     tags=["Users"]
 )
@@ -97,7 +97,7 @@ async def read_all_users(
 
 @crud_routes.get(
     "/teams/{record_id}",
-    response_model=readTeamResponse,
+    response_model=ReadTeamResponse,
     status_code=status.HTTP_200_OK,
     tags=["Teams"]
 )
@@ -115,7 +115,7 @@ async def read_team_by_id(
 
 @crud_routes.get(
     "/teams",
-    response_model=list[readTeamResponse],
+    response_model=list[ReadTeamResponse],
     status_code=status.HTTP_200_OK,
     tags=["Teams"]
 )

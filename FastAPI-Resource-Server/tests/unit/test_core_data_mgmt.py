@@ -4,13 +4,13 @@ from uuid import UUID, uuid4
 import pytest
 from unittest.mock import AsyncMock, Mock
 
-from core.use_cases import dataManagerImpl, publicCrud
-from adapter.sql.data_access import dbAccessImpl
+from core.use_cases import DataManagerImpl, PublicCrud
+from adapter.sql.data_access import DbAccessImpl
 
 
 @pytest.mark.asyncio
 async def test_data_manager_with_mock_repository():
-    mock_repo = Mock(spec=dbAccessImpl)
+    mock_repo = Mock(spec=DbAccessImpl)
 
     mock_record = Mock()
     mock_record.id = uuid4()
@@ -19,7 +19,7 @@ async def test_data_manager_with_mock_repository():
 
     mock_repo.create_record = AsyncMock(return_value=mock_record)
 
-    data_manager = dataManagerImpl(repository=mock_repo)
+    data_manager = DataManagerImpl(repository=mock_repo)
 
     result = await data_manager.process(
         operation="create",
@@ -35,10 +35,10 @@ async def test_data_manager_with_mock_repository():
 
 @pytest.mark.asyncio
 async def test_public_crud_filters_entities():
-    mock_data_manager = Mock(spec=dataManagerImpl)
+    mock_data_manager = Mock(spec=DataManagerImpl)
     mock_data_manager.process = AsyncMock(return_value=Mock(id=uuid4(), name="user1"))
 
-    public_crud = publicCrud(data_manager=mock_data_manager)
+    public_crud = PublicCrud(data_manager=mock_data_manager)
 
     result = await public_crud.process(
         operation="create",
@@ -64,8 +64,8 @@ async def test_general_data_manager(
     db_close,
     sample_teams_data,
     ):
-    repository = dbAccessImpl()
-    data_manager = dataManagerImpl(repository=repository)
+    repository = DbAccessImpl()
+    data_manager = DataManagerImpl(repository=repository)
 
     await db_create_tables()
     for team_attrs in sample_teams_data["valid_values"]:
@@ -99,9 +99,9 @@ async def test_pub_data_manager(
     sample_teams_data,
     sample_users_data,
     ):
-    repository = dbAccessImpl()
-    data_manager = dataManagerImpl(repository=repository)
-    public_data_manager = publicCrud(data_manager=data_manager)
+    repository = DbAccessImpl()
+    data_manager = DataManagerImpl(repository=repository)
+    public_data_manager = PublicCrud(data_manager=data_manager)
 
     await db_create_tables()
 

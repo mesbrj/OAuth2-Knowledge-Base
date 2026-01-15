@@ -8,10 +8,10 @@ from pydantic import ValidationError
 
 from adapter.sql.models import User, Team, Project, ProjectUserLink, ProjectRole
 from adapter.sql.data_base import get_session
-from ports.interfaces import dbAccess
+from ports.interfaces import DbAccess
 
 
-class queryBuilder:
+class QueryBuilder:
     def __init__(self, session, table_mapping):
         self._session = session
         self._table = table_mapping
@@ -44,7 +44,7 @@ class queryBuilder:
         return result.all()
 
 
-class dbAccessImpl(dbAccess):
+class DbAccessImpl(DbAccess):
 
     table = {
         "users": User,
@@ -59,7 +59,7 @@ class dbAccessImpl(dbAccess):
     async def query_records(cls):
         try:
             async with get_session() as db:
-                yield queryBuilder(db, cls.table)
+                yield QueryBuilder(db, cls.table)
 
         except SQLAlchemyError as error:
             raise ValueError(f"Error occurred: {error}")

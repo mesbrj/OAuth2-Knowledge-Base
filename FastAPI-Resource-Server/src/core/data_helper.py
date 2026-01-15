@@ -5,13 +5,13 @@ def validation_helper(func):
     @wraps(func)
     async def wrapper(self, *args, **kwargs):
         wrapped = func.__qualname__.split('.')
-        if wrapped[0] == 'dataManagerImpl' and wrapped[1] == 'process':
+        if wrapped[0] == 'DataManagerImpl' and wrapped[1] == 'process':
             wrapped.append(kwargs.get("operation"))
             wrapped.append(kwargs.get("entity"))
 
         match wrapped:
 
-            case ['dataManagerImpl', 'process', 'create', 'users']:
+            case ['DataManagerImpl', 'process', 'create', 'users']:
                 if kwargs.get("team_name"):
                     record = await self.db.read_record(
                         table_id = "teams",
@@ -23,7 +23,7 @@ def validation_helper(func):
                         )
                     kwargs["team_id"] = record.id
 
-            case ['dataManagerImpl', 'process', 'create', 'teams']:
+            case ['DataManagerImpl', 'process', 'create', 'teams']:
                 if kwargs.get("manager_email"):
                     async with self.db.query_records() as query:
                         user = await (

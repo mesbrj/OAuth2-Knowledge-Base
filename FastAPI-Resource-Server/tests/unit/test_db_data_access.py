@@ -2,7 +2,7 @@ from os import path
 
 import pytest
 
-from adapter.sql.data_access import dbAccessImpl
+from adapter.sql.data_access import DbAccessImpl
 
 @pytest.mark.asyncio
 async def test_db_data_access(
@@ -14,19 +14,19 @@ async def test_db_data_access(
 
     await db_create_tables()
 
-    await dbAccessImpl.create_record(
+    await DbAccessImpl.create_record(
         table_id="teams",
         attributes=sample_teams_data["valid_values"][0]
     )
-    await dbAccessImpl.create_record(
+    await DbAccessImpl.create_record(
         table_id="teams",
         attributes=sample_teams_data["valid_values"][1]
     )
-    team_record_1 = await dbAccessImpl.read_record(
+    team_record_1 = await DbAccessImpl.read_record(
         table_id="teams",
         record_name=sample_teams_data["valid_values"][0]["name"]
     )
-    team_record_2 = await dbAccessImpl.read_record(
+    team_record_2 = await DbAccessImpl.read_record(
         table_id="teams",
         record_name=sample_teams_data["valid_values"][1]["name"]
     )
@@ -36,19 +36,19 @@ async def test_db_data_access(
     assert team_record_1.description == sample_teams_data["valid_values"][0]["description"]
     assert team_record_2.description == sample_teams_data["valid_values"][1]["description"]
 
-    await dbAccessImpl.create_record(
+    await DbAccessImpl.create_record(
         table_id="users",
         attributes=sample_users_data["valid_values"][0]
     )
-    await dbAccessImpl.create_record(
+    await DbAccessImpl.create_record(
         table_id="users",
         attributes=sample_users_data["valid_values"][1]
     )
-    user_record_1 = await dbAccessImpl.read_record(
+    user_record_1 = await DbAccessImpl.read_record(
         table_id="users",
         record_name=sample_users_data["valid_values"][0]["name"]
     )
-    user_record_2 = await dbAccessImpl.read_record(
+    user_record_2 = await DbAccessImpl.read_record(
         table_id="users",
         record_name=sample_users_data["valid_values"][1]["name"]
     )
