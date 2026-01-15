@@ -3,11 +3,13 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 import uvicorn
 
+from config.container import container
 from adapter.sql.data_base import init_db, close_session
 from adapter.rest.routes import health_routes, crud_routes
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    container.initialize()
     if environ.get("ENVIRONMENT", "development") == "development":
         await init_db()
     yield

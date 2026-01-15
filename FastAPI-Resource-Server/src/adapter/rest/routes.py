@@ -1,9 +1,7 @@
-from fastapi import APIRouter, Depends, status
-from adapter.rest.func_deps import (
-    entity_create,
-    entity_read_by_id,
-    entity_read_paginated
-)
+from uuid import UUID
+from fastapi import APIRouter, status
+
+from adapter.rest.di import PublicCrudDep, PaginationDep
 from adapter.rest.dto import (
     createResponse, createUser, createTeam,
     readUserResponse, readTeamResponse
@@ -12,78 +10,125 @@ from adapter.rest.dto import (
 health_routes = APIRouter()
 crud_routes = APIRouter()
 
-@health_routes.get("/health", tags = ["Health"])
+@health_routes.get("/health", tags=["Health"])
 def health_check():
     return {"status": "ok"}
 
 
 @crud_routes.post(
     "/users",
-    response_model = createResponse,
-    status_code = status.HTTP_201_CREATED,
-    tags = ["Users"]
-    )
+    response_model=createResponse,
+    status_code=status.HTTP_201_CREATED,
+    tags=["Users"]
+)
 async def create_user(
     body: createUser,
-    response: createResponse = Depends(entity_create)
-    ):
-    return response
+    data_manager: PublicCrudDep
+):
+    new_rec = await data_manager.process(
+        operation="create",
+        entity=body.entity,
+        **body.model_dump(exclude={"entity"})
+    )
+    return createResponse(
+        record_id=new_rec.id,
+        record_name=new_rec.name,
+    )
 
 
 @crud_routes.post(
     "/teams",
-    response_model = createResponse,
-    status_code = status.HTTP_201_CREATED,
-    tags = ["Teams"]
-    )
+    response_model=createResponse,
+    status_code=status.HTTP_201_CREATED,
+    tags=["Teams"]
+)
 async def create_team(
     body: createTeam,
-    response: createResponse = Depends(entity_create)
-    ):
-    return response
+    data_manager: PublicCrudDep
+):
+    new_rec = await data_manager.process(
+        operation="create",
+        entity=body.entity,
+        **body.model_dump(exclude={"entity"})
+    )
+    return createResponse(
+        record_id=new_rec.id,
+        record_name=new_rec.name,
+    )
 
 
 @crud_routes.get(
     "/users/{record_id}",
-    response_model = readUserResponse,
-    status_code = status.HTTP_200_OK,
-    tags = ["Users"]
-    )
+    response_model=readUserResponse,
+    status_code=status.HTTP_200_OK,
+    tags=["Users"]
+)
 async def read_user_by_id(
-    record_id: str,
-    response: readUserResponse = Depends(entity_read_by_id("users"))
-    ):
-    return response
+    record_id: UUID,
+    data_manager: PublicCrudDep
+):
+    record = await data_manager.process(
+        operation="read",
+        entity="users",
+        record_id=record_id
+    )
+    return record
 
 
 @crud_routes.get(
     "/users",
-    response_model = list[readUserResponse],
-    status_code = status.HTTP_200_OK,
-    tags = ["Users"]
+    response_model=list[readUserResponse],
+    status_code=status.HTTP_200_OK,
+    tags=["Users"]
+)
+async def read_all_users(
+    data_manager: PublicCrudDep,
+    pagination: PaginationDep
+):
+    records = await data_manager.process(
+        operation="read",
+        entity="users",
+        offset=pagination.offset,
+        limit=pagination.limit,
+        order=pagination.order
     )
-async def read_all_users(response: list[readUserResponse] = Depends(entity_read_paginated("users"))):
-    return response
+    return records
 
 
 @crud_routes.get(
     "/teams/{record_id}",
-    response_model = readTeamResponse,
-    status_code = status.HTTP_200_OK,
-    tags = ["Teams"]
-    )
+    response_model=readTeamResponse,
+    status_code=status.HTTP_200_OK,
+    tags=["Teams"]
+)
 async def read_team_by_id(
-    record_id: str,
-    response: readTeamResponse = Depends(entity_read_by_id("teams"))
-    ):
-    return response
+    record_id: UUID,
+    data_manager: PublicCrudDep
+):
+    record = await data_manager.process(
+        operation="read",
+        entity="teams",
+        record_id=record_id
+    )
+    return record
 
 
 @crud_routes.get(
     "/teams",
-    response_model = list[readTeamResponse],
-    status_code = status.HTTP_200_OK,
-    tags = ["Teams"]
+    response_model=list[readTeamResponse],
+    status_code=status.HTTP_200_OK,
+    tags=["Teams"]
+)
+async def read_all_teams(
+    data_manager: PublicCrudDep,
+    pagination: PaginationDep
+):
+    records = await data_manager.process(
+        operation="read",
+        entity="teams",
+        offset=pagination.offset,
+        limit=pagination.limit,
+        order=pagination.order
     )
-async def read_all_teams(response: list[readTeamResponse] = Depends(entity_read_paginated("teams"))):
-    return response
+    return records
+

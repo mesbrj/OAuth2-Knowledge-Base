@@ -1,21 +1,62 @@
 from os import path
+from uuid import UUID, uuid4
 
 import pytest
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, Mock
 
-from ports.inbound import inbound_factory
+from core.use_cases import dataManagerImpl, publicCrud
+from adapter.sql.data_access import dbAccessImpl
+
 
 @pytest.mark.asyncio
-async def test_inbound_factory(mocker):
-    data_manager = inbound_factory("data")
+async def test_data_manager_with_mock_repository():
+    mock_repo = Mock(spec=dbAccessImpl)
 
-    mock_module = MagicMock()
-    mock_module.__name__ = "adapter.rest.mocked"
-    mocker.patch('inspect.getmodule', return_value=mock_module)
-    pub_data_manager = inbound_factory("data")
+    mock_record = Mock()
+    mock_record.id = uuid4()
+    mock_record.name = "test_team"
+    mock_record.description = "Test description"
 
-    assert data_manager.__class__.__name__ == "dataManagerImpl"
-    assert pub_data_manager.__class__.__name__ == "publicCrud"
+    mock_repo.create_record = AsyncMock(return_value=mock_record)
+
+    data_manager = dataManagerImpl(repository=mock_repo)
+
+    result = await data_manager.process(
+        operation="create",
+        entity="teams",
+        name="test_team",
+        description="Test description"
+    )
+
+    mock_repo.create_record.assert_called_once()
+    assert result.name == "test_team"
+    assert result.description == "Test description"
+
+
+@pytest.mark.asyncio
+async def test_public_crud_filters_entities():
+    mock_data_manager = Mock(spec=dataManagerImpl)
+    mock_data_manager.process = AsyncMock(return_value=Mock(id=uuid4(), name="user1"))
+
+    public_crud = publicCrud(data_manager=mock_data_manager)
+
+    result = await public_crud.process(
+        operation="create",
+        entity="users",
+        name="user1",
+        email="user1@example.com"
+    )
+    assert result is not None
+    mock_data_manager.process.assert_called_once()
+
+    mock_data_manager.process.reset_mock()
+    result = await public_crud.process(
+        operation="create",
+        entity="project_roles",
+        name="role1"
+    )
+    assert result is None
+    mock_data_manager.process.assert_not_called()
 
 @pytest.mark.asyncio
 async def test_general_data_manager(
@@ -23,8 +64,8 @@ async def test_general_data_manager(
     db_close,
     sample_teams_data,
     ):
-
-    data_manager = inbound_factory("data")
+    repository = dbAccessImpl()
+    data_manager = dataManagerImpl(repository=repository)
 
     await db_create_tables()
     for team_attrs in sample_teams_data["valid_values"]:
@@ -57,13 +98,10 @@ async def test_pub_data_manager(
     db_close,
     sample_teams_data,
     sample_users_data,
-    mocker,
     ):
-
-    mock_module = MagicMock()
-    mock_module.__name__ = "adapter.rest.mocked"
-    mocker.patch('inspect.getmodule', return_value=mock_module)
-    public_data_manager = inbound_factory("data")
+    repository = dbAccessImpl()
+    data_manager = dataManagerImpl(repository=repository)
+    public_data_manager = publicCrud(data_manager=data_manager)
 
     assert public_data_manager.__class__.__name__ == "publicCrud"
 

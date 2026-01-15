@@ -13,12 +13,15 @@ from pytest import fixture
 from adapter.sql.models import User, Team
 from adapter.sql.data_base import init_db, get_session, close_session
 from adapter.rest.server import web_app
+from config.container import container
 
 
 @fixture()
 async def fastapi_client():
     @asynccontextmanager
     async def test_lifespan(app: FastAPI):
+        container.reset()
+        container.initialize()
         await init_db()
         yield
         if await close_session():

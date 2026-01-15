@@ -4,9 +4,6 @@ from abc import ABC, abstractmethod
 # inbound interfaces
 
 class dataManager(ABC):
-    """
-    Interface for data management operations in all models: Business, Persistence ...
-    """
     @abstractmethod
     async def process(
         self,
@@ -18,9 +15,6 @@ class dataManager(ABC):
 # repository interfaces
 
 class dbAccess(ABC):
-    """
-    Interface for database operations
-    """
     @abstractmethod
     async def query_records(self): ...
 

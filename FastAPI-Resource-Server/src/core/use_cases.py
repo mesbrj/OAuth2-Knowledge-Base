@@ -1,5 +1,4 @@
-from ports.interfaces import dataManager
-from ports.repository import repo_factory
+from ports.interfaces import dataManager, dbAccess
 from core.data_helper import validation_helper
 from core.data_domain import (
     userEntity, teamEntity, projectEntity,
@@ -8,11 +7,8 @@ from core.data_domain import (
 
 
 class dataManagerImpl(dataManager):
-    """
-    Data management operations in all models: Business, Persistence ...
-    """
-    def __init__(self):
-        self.db = repo_factory("database")
+    def __init__(self, repository: dbAccess):
+        self.db = repository
         self.entities = {
             "users": userEntity,
             "teams": teamEntity,
@@ -49,11 +45,8 @@ class dataManagerImpl(dataManager):
             return record
 
 class publicCrud():
-    """
-    Proxy class to filter allowed operations and allowed models (only Database)
-    """
-    def __init__(self):
-        self._proxy_to = dataManagerImpl()
+    def __init__(self, data_manager: dataManager):
+        self._proxy_to = data_manager
 
     def __getattr__(self, name):
         async def filter(*args, **kwargs):

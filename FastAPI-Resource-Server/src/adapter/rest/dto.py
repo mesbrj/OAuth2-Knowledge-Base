@@ -47,8 +47,6 @@ class readUserResponse(BaseModel):
     entity: Literal["users"] = "users"
 
 
-
-
 class readTeamResponse(BaseModel):
     model_config = {"from_attributes": True}
 
@@ -59,4 +57,3 @@ class readTeamResponse(BaseModel):
     manager: readUserResponse | None = None
     users: list[readUserResponse] | None = None
     entity: Literal["teams"] = "teams"
-
