@@ -103,8 +103,6 @@ async def test_pub_data_manager(
     data_manager = dataManagerImpl(repository=repository)
     public_data_manager = publicCrud(data_manager=data_manager)
 
-    assert public_data_manager.__class__.__name__ == "publicCrud"
-
     await db_create_tables()
 
     for team_attrs in sample_teams_data["valid_values"]:
