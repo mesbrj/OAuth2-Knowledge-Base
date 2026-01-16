@@ -8,30 +8,24 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     """Application configuration settings loaded from environment variables."""
-    
-    # ===== OAuth2 / Hydra Configuration =====
+
     HYDRA_ADMIN_URL: str = "http://localhost:4445"
     HYDRA_PUBLIC_URL: str = "http://localhost:4444"
     OAUTH2_CLIENT_ID: Optional[str] = None
     OAUTH2_CLIENT_SECRET: Optional[str] = None
-    
-    # ===== GitHub OAuth Configuration =====
+
     GITHUB_CLIENT_ID: Optional[str] = None
     GITHUB_CLIENT_SECRET: Optional[str] = None
     GITHUB_REDIRECT_URI: str = "http://localhost:8080/auth/github-callback"
-    
-    # ===== Keto Configuration =====
+
     KETO_READ_URL: str = "http://localhost:4466"
     KETO_WRITE_URL: str = "http://localhost:4467"
     KETO_NAMESPACE: str = "fastapi-resource-server"
-    
-    # ===== Application Configuration =====
+
     APP_URL: str = "http://localhost:8080"
     ENVIRONMENT: str = "development"
-    
-    # ===== Database Configuration =====
-    # Add any existing database settings here if needed
-    
+
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
@@ -40,5 +34,4 @@ class Settings(BaseSettings):
     )
 
 
-# Singleton instance
 settings = Settings()
