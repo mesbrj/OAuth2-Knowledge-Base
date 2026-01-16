@@ -6,7 +6,7 @@ import pytest
 from unittest.mock import AsyncMock, patch, Mock
 import httpx
 
-from auth.keto_client import KetoPermissionChecker
+from adapter.auth.keto_client import KetoPermissionChecker
 
 
 @pytest.fixture

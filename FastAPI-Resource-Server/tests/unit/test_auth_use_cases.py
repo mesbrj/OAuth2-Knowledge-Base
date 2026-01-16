@@ -4,8 +4,8 @@ Unit tests for authentication and authorization use cases.
 
 import pytest
 from unittest.mock import AsyncMock, Mock
-from core.auth_use_cases import AuthorizationUseCaseImpl
-from ports.auth_interfaces import PermissionChecker
+from core.auth.use_cases import AuthorizationImpl
+from ports.outbound.auth import PermissionChecker
 
 
 @pytest.fixture
@@ -17,8 +17,8 @@ def mock_permission_checker():
 
 @pytest.fixture
 def authorization_use_case(mock_permission_checker):
-    """Create an AuthorizationUseCaseImpl with mock dependencies."""
-    return AuthorizationUseCaseImpl(mock_permission_checker)
+    """Create an AuthorizationImpl with mock dependencies."""
+    return AuthorizationImpl(mock_permission_checker)
 
 
 @pytest.mark.asyncio

@@ -9,7 +9,7 @@ from typing import List
 import httpx
 from config.settings import settings
 from config.logger import logger
-from ports.auth_interfaces import PermissionChecker
+from ports.outbound.auth import PermissionChecker
 
 
 class KetoPermissionChecker(PermissionChecker):

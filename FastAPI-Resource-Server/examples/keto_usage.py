@@ -6,7 +6,13 @@ and roles in the FastAPI Resource Server.
 """
 
 import asyncio
-from auth import keto_permission_checker
+import sys
+from pathlib import Path
+
+# Add src to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
+
+from adapter.auth.keto_client import keto_permission_checker
 
 
 async def main():

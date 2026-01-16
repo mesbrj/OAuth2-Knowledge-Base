@@ -1,9 +1,11 @@
-from ports.interfaces import DataManager, DbAccess
-from ports.auth_interfaces import PermissionChecker, AuthorizationUseCase
+from ports.repository.data_base import DbAccess
+from ports.inbound.data_manager import DataManager
+from ports.outbound.auth import PermissionChecker
+from ports.inbound.auth import Authorization
 from adapter.sql.data_access import DbAccessImpl
-from auth.keto_client import keto_permission_checker
-from core.use_cases import DataManagerImpl, PublicCrud
-from core.auth_use_cases import AuthorizationUseCaseImpl
+from adapter.auth.keto_client import keto_permission_checker
+from core.data_manager.use_cases import DataManagerImpl, PublicCrud
+from core.auth.use_cases import AuthorizationImpl 
 
 
 class DependencyContainer:
@@ -12,7 +14,7 @@ class DependencyContainer:
         self._data_manager: DataManager | None = None
         self._public_crud: DataManager | None = None
         self._permission_checker: PermissionChecker | None = None
-        self._authorization_use_case: AuthorizationUseCase | None = None
+        self._authorization_use_case: Authorization | None = None
         self._initialized = False
 
     def initialize(self) -> None:
@@ -25,7 +27,7 @@ class DependencyContainer:
         
         # Auth layer
         self._permission_checker = keto_permission_checker
-        self._authorization_use_case = AuthorizationUseCaseImpl(
+        self._authorization_use_case = AuthorizationImpl(
             permission_checker=self._permission_checker
         )
         
@@ -59,7 +61,7 @@ class DependencyContainer:
             raise RuntimeError("Dependencies not initialized. Call container.initialize() first.")
         return self._permission_checker
 
-    def get_authorization_use_case(self) -> AuthorizationUseCase:
+    def get_authorization_use_case(self) -> Authorization:
         if self._authorization_use_case is None:
             raise RuntimeError("Dependencies not initialized. Call container.initialize() first.")
         return self._authorization_use_case

@@ -1,6 +1,7 @@
-from ports.interfaces import DataManager, DbAccess
-from core.data_helper import validation_helper
-from core.data_domain import (
+from ports.inbound.data_manager import DataManager
+from ports.repository.data_base import DbAccess
+from core.data_manager.data_helper import validation_helper
+from core.data_manager.data_domain import (
     UserEntity, TeamEntity, ProjectEntity,
     ProjectRoleEntity, StartedProjectEntity
 )

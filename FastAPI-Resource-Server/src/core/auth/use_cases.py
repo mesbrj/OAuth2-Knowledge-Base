@@ -6,19 +6,14 @@ without depending on specific implementations (hexagonal architecture).
 """
 
 from typing import List
-from ports.auth_interfaces import (
-    AuthenticationUseCase,
-    AuthorizationUseCase,
-    PermissionChecker,
-    TokenValidator,
-    IdentityProvider,
-    UserInfo,
-    TokenData
-)
+from ports.inbound.auth import Authentication, Authorization
+from ports.outbound.auth import IdentityProvider, TokenValidator, PermissionChecker
+from ports.models.auth import TokenData, UserInfo
+
 from config.logger import logger
 
 
-class AuthenticationUseCaseImpl(AuthenticationUseCase):
+class AuthenticationImpl(Authentication):
     """
     Implementation of authentication use cases.
     
@@ -86,7 +81,7 @@ class AuthenticationUseCaseImpl(AuthenticationUseCase):
             raise ValueError(f"Invalid token: {e}")
 
 
-class AuthorizationUseCaseImpl(AuthorizationUseCase):
+class AuthorizationImpl(Authorization):
     """
     Implementation of authorization use cases.
     

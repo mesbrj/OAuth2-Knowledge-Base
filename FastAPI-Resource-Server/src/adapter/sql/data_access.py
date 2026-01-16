@@ -8,7 +8,7 @@ from pydantic import ValidationError
 
 from adapter.sql.models import User, Team, Project, ProjectUserLink, ProjectRole
 from adapter.sql.data_base import get_session
-from ports.interfaces import DbAccess
+from ports.repository.data_base import DbAccess
 
 
 class QueryBuilder:

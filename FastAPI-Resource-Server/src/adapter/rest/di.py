@@ -1,7 +1,7 @@
 from fastapi import Depends, Query
 from typing import Annotated
 
-from ports.interfaces import DataManager
+from ports.inbound.data_manager import DataManager
 from config.container import container
 from adapter.rest.dto import QueryPagination
 

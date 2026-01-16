@@ -4,7 +4,7 @@ from uuid import UUID, uuid4
 import pytest
 from unittest.mock import AsyncMock, Mock
 
-from core.use_cases import DataManagerImpl, PublicCrud
+from core.data_manager.use_cases import DataManagerImpl, PublicCrud
 from adapter.sql.data_access import DbAccessImpl
 
 
