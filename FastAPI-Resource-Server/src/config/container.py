@@ -4,12 +4,19 @@ from ports.inbound.auth import Authorization
 from ports.outbound.auth import PermissionChecker
 from ports.repository.data_base import DbAccess
 from adapter.sql.data_access import DbAccessImpl
-from adapter.auth.keto_client import keto_permission_checker
+from adapter.auth.keto_client import KetoPermissionChecker
 from core.data_manager.use_cases import DataManagerImpl, PublicCrud
-from core.auth.use_cases import AuthorizationImpl 
+from core.auth.use_cases import AuthorizationImpl
 
 
 class DependencyContainer:
+    _instance = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(DependencyContainer, cls).__new__(cls)
+        return cls._instance
+
     def __init__(self):
         self._db_access: DbAccess | None = None
         self._data_manager: DataManager | None = None
@@ -25,13 +32,10 @@ class DependencyContainer:
         self._db_access = DbAccessImpl()
         self._data_manager = DataManagerImpl(repository=self._db_access)
         self._public_crud = PublicCrud(data_manager=self._data_manager)
-        
         # Auth layer
-        self._permission_checker = keto_permission_checker
-        self._authorization_use_case = AuthorizationImpl(
-            permission_checker=self._permission_checker
-        )
-        
+        self._permission_checker = KetoPermissionChecker()
+        self._authorization_use_case = AuthorizationImpl(permission_checker=self._permission_checker)
+
         self._initialized = True
 
     def reset(self) -> None:
@@ -66,6 +70,5 @@ class DependencyContainer:
         if self._authorization_use_case is None:
             raise RuntimeError("Dependencies not initialized. Call container.initialize() first.")
         return self._authorization_use_case
-
 
 container = DependencyContainer()

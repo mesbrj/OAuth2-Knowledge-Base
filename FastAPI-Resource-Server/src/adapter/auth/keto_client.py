@@ -242,7 +242,3 @@ class KetoPermissionChecker(PermissionChecker):
             logger.error(f"Unexpected error getting user roles: {e}")
 
         return roles
-
-
-# Singleton instance for convenient access
-keto_permission_checker = KetoPermissionChecker()
