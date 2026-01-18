@@ -8,10 +8,10 @@ from pydantic import ValidationError
 
 from adapter.sql.models import User, Team, Project, ProjectUserLink, ProjectRole
 from adapter.sql.data_base import get_session
-from ports.interfaces import dbAccess
+from ports.repository.data_base import DbAccess
 
 
-class queryBuilder:
+class QueryBuilder:
     def __init__(self, session, table_mapping):
         self._session = session
         self._table = table_mapping
@@ -44,7 +44,7 @@ class queryBuilder:
         return result.all()
 
 
-class dbAccessImpl(dbAccess):
+class DbAccessImpl(DbAccess):
 
     table = {
         "users": User,
@@ -59,7 +59,7 @@ class dbAccessImpl(dbAccess):
     async def query_records(cls):
         try:
             async with get_session() as db:
-                yield queryBuilder(db, cls.table)
+                yield QueryBuilder(db, cls.table)
 
         except SQLAlchemyError as error:
             raise ValueError(f"Error occurred: {error}")
@@ -112,7 +112,7 @@ class dbAccessImpl(dbAccess):
                 else:
                     statement = statement.offset(offset or 0).limit(limit or 100)
                     if order in ("asc", "desc"):
-                        order_field = cls.table[table_id].id if table_id == "started_projects" else cls.table[table_id].name
+                        order_field = cls.table[table_id].created_at if table_id == "started_projects" else cls.table[table_id].name
                         statement = statement.order_by(
                             order_field.asc() if order == "asc" else order_field.desc()
                         )

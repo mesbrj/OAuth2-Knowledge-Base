@@ -2,8 +2,11 @@ uvicorn[standard]
 fastapi[standard]
 sqlmodel
 pydantic[email]
+pydantic-settings
 aiosqlite
 httpx
+authlib
+python-multipart
 pytest
 pytest-asyncio
 pytest-mock

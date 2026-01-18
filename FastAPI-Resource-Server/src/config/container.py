@@ -1,43 +1,74 @@
-from ports.interfaces import dataManager, dbAccess
-from adapter.sql.data_access import dbAccessImpl
-from core.use_cases import dataManagerImpl, publicCrud
+
+from ports.inbound.data_manager import DataManager
+from ports.inbound.auth import Authorization
+from ports.outbound.auth import PermissionChecker
+from ports.repository.data_base import DbAccess
+from adapter.sql.data_access import DbAccessImpl
+from adapter.auth.keto_client import KetoPermissionChecker
+from core.data_manager.use_cases import DataManagerImpl, PublicCrud
+from core.auth.use_cases import AuthorizationImpl
 
 
 class DependencyContainer:
+    _instance = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(DependencyContainer, cls).__new__(cls)
+        return cls._instance
+
     def __init__(self):
-        self._db_access: dbAccess | None = None
-        self._data_manager: dataManager | None = None
-        self._public_crud: dataManager | None = None
+        self._db_access: DbAccess | None = None
+        self._data_manager: DataManager | None = None
+        self._public_crud: DataManager | None = None
+        self._permission_checker: PermissionChecker | None = None
+        self._authorization_use_case: Authorization | None = None
         self._initialized = False
 
     def initialize(self) -> None:
         if self._initialized:
             return
-        self._db_access = dbAccessImpl()
-        self._data_manager = dataManagerImpl(repository=self._db_access)
-        self._public_crud = publicCrud(data_manager=self._data_manager)
+        # Data layer
+        self._db_access = DbAccessImpl()
+        self._data_manager = DataManagerImpl(repository=self._db_access)
+        self._public_crud = PublicCrud(data_manager=self._data_manager)
+        # Auth layer
+        self._permission_checker = KetoPermissionChecker()
+        self._authorization_use_case = AuthorizationImpl(permission_checker=self._permission_checker)
+
         self._initialized = True
 
     def reset(self) -> None:
         self._db_access = None
         self._data_manager = None
         self._public_crud = None
+        self._permission_checker = None
+        self._authorization_use_case = None
         self._initialized = False
 
-    def get_db_access(self) -> dbAccess:
+    def get_db_access(self) -> DbAccess:
         if self._db_access is None:
             raise RuntimeError("Dependencies not initialized. Call container.initialize() first.")
         return self._db_access
 
-    def get_data_manager(self) -> dataManager:
+    def get_data_manager(self) -> DataManager:
         if self._data_manager is None:
             raise RuntimeError("Dependencies not initialized. Call container.initialize() first.")
         return self._data_manager
 
-    def get_public_crud(self) -> dataManager:
+    def get_public_crud(self) -> DataManager:
         if self._public_crud is None:
             raise RuntimeError("Dependencies not initialized. Call container.initialize() first.")
         return self._public_crud
 
+    def get_permission_checker(self) -> PermissionChecker:
+        if self._permission_checker is None:
+            raise RuntimeError("Dependencies not initialized. Call container.initialize() first.")
+        return self._permission_checker
+
+    def get_authorization_use_case(self) -> Authorization:
+        if self._authorization_use_case is None:
+            raise RuntimeError("Dependencies not initialized. Call container.initialize() first.")
+        return self._authorization_use_case
 
 container = DependencyContainer()

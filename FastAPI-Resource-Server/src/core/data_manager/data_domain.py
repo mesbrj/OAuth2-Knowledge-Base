@@ -4,7 +4,7 @@ from pydantic import BaseModel, ConfigDict, EmailStr
 
 # Entities
 
-class userEntity(BaseModel):
+class UserEntity(BaseModel):
     model_config = ConfigDict(extra='ignore')
 
     id: UUID | None = None
@@ -13,13 +13,13 @@ class userEntity(BaseModel):
     location: str | None = None
     team_name: str | None = None
     team_id: UUID | None = None
-    team: Optional['teamEntity'] = None
-    manages: Optional['teamEntity'] = None
-    projects: Optional[list['projectEntity']] = None
+    team: Optional['TeamEntity'] = None
+    manages: Optional['TeamEntity'] = None
+    projects: Optional[list['ProjectEntity']] = None
     entity: Literal["users"] = "users"
 
 
-class teamEntity(BaseModel):
+class TeamEntity(BaseModel):
     model_config = ConfigDict(extra='ignore')
 
     id: UUID | None = None
@@ -27,32 +27,32 @@ class teamEntity(BaseModel):
     description: str | None = None
     manager_name: str | None = None
     manager_id: UUID | None = None
-    manager: Optional['userEntity'] = None
-    users: Optional[list[userEntity]] = None
+    manager: Optional['UserEntity'] = None
+    users: Optional[list[UserEntity]] = None
     entity: Literal["teams"] = "teams"
 
 
-class projectEntity(BaseModel):
+class ProjectEntity(BaseModel):
     model_config = ConfigDict(extra='ignore')
 
     id: UUID | None = None
     name: str | None = None
     description: str | None = None
-    users: Optional[list[userEntity]] = None
+    users: Optional[list[UserEntity]] = None
     entity: Literal["projects"] = "projects"
 
 
-class projectRoleEntity(BaseModel):
+class ProjectRoleEntity(BaseModel):
     model_config = ConfigDict(extra='ignore')
 
     id: UUID | None = None
     name: str | None = None
     description: str | None = None
-    projects: Optional[list[projectEntity]] = None
+    projects: Optional[list[ProjectEntity]] = None
     entity: Literal["project_roles"] = "project_roles"
 
 
-class startedProjectEntity(BaseModel):
+class StartedProjectEntity(BaseModel):
     model_config = ConfigDict(extra='ignore')
 
     id: UUID | None = None
@@ -62,5 +62,5 @@ class startedProjectEntity(BaseModel):
     user_id: UUID | None = None
     role_name: str | None = None
     role_id: UUID | None = None
-    role: projectRoleEntity | None = None
+    role: ProjectRoleEntity | None = None
     entity: Literal["started_projects"] = "started_projects"

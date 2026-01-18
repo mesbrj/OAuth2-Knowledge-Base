@@ -1,20 +1,8 @@
 from uuid import UUID
 from abc import ABC, abstractmethod
 
-# inbound interfaces
 
-class dataManager(ABC):
-    @abstractmethod
-    async def process(
-        self,
-        operation: str,
-        entity: str,
-        **kwargs
-        ): ...
-
-# repository interfaces
-
-class dbAccess(ABC):
+class DbAccess(ABC):
     @abstractmethod
     async def query_records(self): ...
 

@@ -1,20 +1,21 @@
-from ports.interfaces import dataManager, dbAccess
-from core.data_helper import validation_helper
-from core.data_domain import (
-    userEntity, teamEntity, projectEntity,
-    projectRoleEntity, startedProjectEntity
+from ports.inbound.data_manager import DataManager
+from ports.repository.data_base import DbAccess
+from core.data_manager.data_helper import validation_helper
+from core.data_manager.data_domain import (
+    UserEntity, TeamEntity, ProjectEntity,
+    ProjectRoleEntity, StartedProjectEntity
 )
 
 
-class dataManagerImpl(dataManager):
-    def __init__(self, repository: dbAccess):
+class DataManagerImpl(DataManager):
+    def __init__(self, repository: DbAccess):
         self.db = repository
         self.entities = {
-            "users": userEntity,
-            "teams": teamEntity,
-            "projects": projectEntity,
-            "project_roles": projectRoleEntity,
-            "started_projects": startedProjectEntity,
+            "users": UserEntity,
+            "teams": TeamEntity,
+            "projects": ProjectEntity,
+            "project_roles": ProjectRoleEntity,
+            "started_projects": StartedProjectEntity,
         }
 
     @validation_helper
@@ -44,8 +45,8 @@ class dataManagerImpl(dataManager):
             )
             return record
 
-class publicCrud():
-    def __init__(self, data_manager: dataManager):
+class PublicCrud():
+    def __init__(self, data_manager: DataManager):
         self._proxy_to = data_manager
 
     def __getattr__(self, name):

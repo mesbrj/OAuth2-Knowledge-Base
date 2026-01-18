@@ -13,6 +13,21 @@ This document outlines the complete implementation plan for adding OAuth2 Author
 - **Token Type**: Opaque tokens (validated via introspection)
 - **Client Type**: Confidential (PKCE + client_secret)
 
+**Hexagonal Architecture (Ports & Adapters):**
+- **Core Layer** (`src/core/`): Business logic independent of external systems
+  - `auth/use_cases.py`: Authentication and authorization use cases
+  - `data_manager/use_cases.py`: Data management use cases
+- **Ports Layer** (`src/ports/`): Interface contracts
+  - `inbound/`: Use case interfaces (entry points to core)
+  - `outbound/`: Adapter interfaces (external dependencies)
+  - `models/`: Models (stable contracts)
+  - `repository/`: Database interfaces
+- **Adapters Layer** (`src/adapter/`): External system implementations
+  - `auth/`: Authentication adapters (Keto, Hydra, GitHub)
+  - `rest/`: FastAPI REST API
+  - `sql/`: Database layer (SQLAlchemy)
+- **Config Layer** (`src/config/`): Dependency injection and settings
+
 ### Use Case
 
 This is an **API-first authentication system** where:
@@ -40,7 +55,13 @@ This is an **API-first authentication system** where:
 - Updated `requirements.txt`
 - `.env.example` file
 - Updated `settings.py` with all OAuth2 configurations
-- New directories: `src/auth/`, `static/`
+- New directories:
+  - `src/adapter/auth/` - Authentication adapters (Keto, Hydra, GitHub)
+  - `src/ports/inbound/` - Use case interfaces
+  - `src/ports/outbound/` - Adapter interfaces
+  - `src/ports/models/` - Auth models
+  - `src/core/auth/` - Authentication/authorization use cases
+  - `static/` - Frontend assets
 
 **New Dependencies:**
 ```
@@ -62,24 +83,38 @@ python -c "from config.settings import Settings; print(Settings())"
 
 ### 📋 Phase 2: Keto Integration
 
-**Goal:** Implement permission checking with Ory Keto
+**Goal:** Implement permission checking with Ory Keto following hexagonal architecture
 
 **Tasks:**
-1. Create `src/auth/keto_client.py`
-2. Implement methods:
-   - `get_user_permissions(username)` - Get all user permissions from Keto
-   - `check_permission(username, permission)` - Check if user has specific permission
-3. Add Keto configuration to settings
+1. Create port interface: `src/ports/outbound/auth.py` with `PermissionChecker` ABC
+2. Create adapter: `src/adapter/auth/keto_client.py` implementing `PermissionChecker`
+3. Create use case: `src/core/auth/use_cases.py` with `AuthorizationImpl`
+4. Wire dependencies in `src/config/container.py`
+5. Add Keto configuration to settings
 
 **Deliverables:**
-- Complete `keto_client.py` module
-- Keto client class with permission checking logic
+- Port interface: `PermissionChecker` (abstraction)
+- Adapter: `KetoPermissionChecker` (concrete implementation)
+- Use case: `AuthorizationImpl` (business logic)
+- Auth models in `src/ports/models/auth.py`
 
-**Key Methods:**
+**Key Components:**
 ```python
-class KetoClient:
+# Port (Interface)
+class PermissionChecker(ABC):
     async def get_user_permissions(username: str) -> List[str]
     async def check_permission(username: str, permission: str) -> bool
+    async def get_user_roles(username: str) -> List[str]
+
+# Adapter (Implementation)
+class KetoPermissionChecker(PermissionChecker):
+    # Implements all abstract methods using Ory Keto
+
+# Use Case (Business Logic)
+class AuthorizationImpl(Authorization):
+    def __init__(self, permission_checker: PermissionChecker)
+    async def check_user_access(username, permission) -> bool
+    async def get_user_authorized_scopes(username, scopes) -> List[str]
 ```
 
 **Testing:**
@@ -93,26 +128,38 @@ curl http://localhost:4466/relation-tuples
 
 ### 📋 Phase 3: GitHub OAuth Provider
 
-**Goal:** Implement GitHub OAuth authentication integration
+**Goal:** Implement GitHub OAuth authentication integration following hexagonal architecture
 
 **Tasks:**
-1. Create `src/auth/github_provider.py`
-2. Implement methods:
-   - `get_authorization_url(state)` - Build GitHub auth URL
-   - `exchange_code(code)` - Exchange authorization code for GitHub access token
-   - `get_user_info(access_token)` - Fetch GitHub user profile
-3. Add GitHub credentials to settings
+1. Add `IdentityProvider` interface to `src/ports/outbound/auth.py`
+2. Create adapter: `src/adapter/auth/github_provider.py` implementing `IdentityProvider`
+3. Update use case: `src/core/auth/use_cases.py` with `AuthenticationImpl`
+4. Wire into dependency container
+5. Add GitHub credentials to settings
 
 **Deliverables:**
-- Complete `github_provider.py` module
-- GitHub OAuth client wrapper
+- Port interface: `IdentityProvider` (abstraction)
+- Adapter: `GitHubIdentityProvider` (concrete implementation)
+- Use case: `AuthenticationImpl` (business logic)
+- Updated auth models: `UserInfo` in `src/ports/models/auth.py`
 
-**Key Methods:**
+**Key Components:**
 ```python
-class GitHubProvider:
+# Port (Interface)
+class IdentityProvider(ABC):
     def get_authorization_url(state: str) -> str
     async def exchange_code(code: str) -> str
-    async def get_user_info(access_token: str) -> Dict[str, Any]
+    async def get_user_info(access_token: str) -> UserInfo
+
+# Adapter (Implementation)
+class GitHubIdentityProvider(IdentityProvider):
+    # Implements GitHub OAuth flow
+
+# Use Case (Business Logic)
+class AuthenticationImpl(Authentication):
+    def __init__(self, identity_provider: IdentityProvider, token_validator: TokenValidator)
+    async def authenticate_with_provider(code, state) -> UserInfo
+    async def validate_access_token(token) -> TokenData
 ```
 
 **Testing:**
@@ -128,32 +175,48 @@ async def test_github_user_info():
 
 ### 📋 Phase 4: Token Validation & OAuth2 Dependencies
 
-**Goal:** Implement token introspection and FastAPI dependencies
+**Goal:** Implement token introspection and FastAPI dependencies following hexagonal architecture
 
 **Tasks:**
-1. Create `src/auth/oauth2.py`
-2. Implement:
-   - `TokenData` class - Token information model
-   - `OAuth2Handler` class - Token introspection with Hydra
-   - `get_current_user()` - FastAPI dependency for token validation
-   - `require_scope(scope)` - FastAPI dependency for scope checking
-3. Add HTTP Bearer security scheme
+1. Add `TokenValidator` interface to `src/ports/outbound/auth.py`
+2. Create `TokenData` model in `src/ports/models/auth.py`
+3. Create adapter: `src/adapter/auth/hydra_validator.py` implementing `TokenValidator`
+4. Update `AuthenticationImpl` in `src/core/auth/use_cases.py` to use `TokenValidator`
+5. Create FastAPI dependencies in `src/adapter/rest/auth_dependencies.py`
+6. Add HTTP Bearer security scheme
 
 **Deliverables:**
-- Complete `oauth2.py` module
-- Reusable FastAPI dependencies for authentication
+- Port interface: `TokenValidator` (abstraction)
+- Auth model: `TokenData` (in ports/models)
+- Adapter: `HydraTokenValidator` (concrete implementation)
+- REST layer: FastAPI dependencies for authentication
+- Dependency injection wiring
 
 **Key Components:**
 ```python
-class TokenData:
+# Auth Model (ports/models/auth.py)
+class TokenData(BaseModel):
     sub: str
     username: str
     scopes: List[str]
     active: bool
+    expires_at: Optional[int]
 
-class OAuth2Handler:
+# Port (Interface - ports/outbound/auth.py)
+class TokenValidator(ABC):
     async def introspect_token(token: str) -> TokenData
 
+# Adapter (Implementation - adapter/auth/hydra_validator.py)
+class HydraTokenValidator(TokenValidator):
+    async def introspect_token(token: str) -> TokenData:
+        # Call Hydra introspection endpoint
+
+# Use Case (Updated - core/auth/use_cases.py)
+class AuthenticationImpl(Authentication):
+    def __init__(self, identity_provider: IdentityProvider, token_validator: TokenValidator)
+    async def validate_access_token(token: str) -> TokenData
+
+# FastAPI Dependencies (adapter/rest/auth_dependencies.py)
 async def get_current_user(credentials: HTTPAuthorizationCredentials) -> TokenData
 def require_scope(required_scope: str) -> Callable
 ```
@@ -1018,7 +1081,3 @@ curl -H "Authorization: Bearer $TOKEN" http://localhost:8080/users
 - Ready for production with proper error handling and logging
 
 ---
-
-**Version:** 1.0  
-**Last Updated:** January 15, 2026  
-**Status:** Planning Phase
