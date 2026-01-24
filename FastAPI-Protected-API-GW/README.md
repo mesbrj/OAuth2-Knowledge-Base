@@ -1,5 +1,5 @@
 
-[OAuth2 Authorization Code Flow - Implementation Plan](/FastAPI-Resource-Server/IMPLEMENTATION_PLAN.md)
+[OAuth2 Authorization Code Flow - Implementation Plan](/FastAPI-Protected-API-GW/IMPLEMENTATION_PLAN.md)
 
 ```bash
 # 81% coverage
